@@ -1,8 +1,11 @@
+#include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "rtmpserver.h"
 #include "ringbuf.h"
 #include "transcode_talker.h"
+#include "s3_worker.h"
 
 typedef struct {
     RingBuffer *ringbuf;
@@ -65,8 +68,12 @@ int main() {
     };
 
     TranscodeTalker_init(&main_ctx.transcode_talker);
+    s3_worker_init();
+
     pthread_t transmux_thread;
     pthread_create(&transmux_thread, NULL, &TranscodeTalker_main, &main_ctx.transcode_talker);
+    pthread_t s3worker_thread;
+    pthread_create(&s3worker_thread, NULL, &s3_worker_main, NULL);
 
     start_rtmpserver(rtmp_cbs, &main_ctx);
     return 0;

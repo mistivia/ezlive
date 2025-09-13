@@ -292,6 +292,6 @@ void TranscodeTalker_init(TranscodeTalker *self) {
 void TranscodeTalker_new_stream(TranscodeTalker *self, RingBuffer *ringbuf) {
     pthread_mutex_lock(&self->lock);
     self->stream = ringbuf;
-    pthread_mutex_unlock(&self->lock);
     pthread_cond_signal(&self->streaming_cond);
+    pthread_mutex_unlock(&self->lock);
 }

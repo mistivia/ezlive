@@ -1,12 +1,12 @@
 #ifndef RTMPSERVER_H_
 #define RTMPSERVER_H_
 
-#include <stdint.h>
-#include <stdlib.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdint.h>
+#include <stdlib.h>
 
 typedef struct {
     void (*on_start)(void *ctx);

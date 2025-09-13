@@ -11,6 +11,4 @@ void upload_file(const char *local, const char *remote);
 
 void remove_remote(const char *remote);
 
-char ** list_file();
-
 #endif
