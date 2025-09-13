@@ -1,16 +1,23 @@
- #include "transmuxer.h"
+#include "transmuxer.h"
 #include "ringbuf.h"
 
 #include <bits/pthreadtypes.h>
 #include <libavformat/avformat.h>
+#include <libavformat/avio.h>
+#include <libavutil/mem.h>
 #include <libavutil/timestamp.h>
 #include <pthread.h>
 #include <stdlib.h>
 
 
 static int wait_for_new_stream(Transmuxer *self) {
-    // if no new stream, return 0
-    return 0;
+    while (pthread_cond_wait(&self->streaming_cond, &self->lock)) {
+        if (self->quit) {
+            return 0;
+        }
+        if (self->stream != NULL) break;
+    }
+    return 1;
 }
 
 typedef struct {
@@ -48,6 +55,26 @@ static StreamPair start_new_output_file(
     };
 }
 
+static int RingBuffer_avio_read(void *ctx, uint8_t *buf, int buf_size) {
+    RingBuffer *rb = ctx;
+    if (rb->finished_flag) return AVERROR_EOF;
+    size_t n = RingBuffer_read(rb, buf, buf_size);
+    return (int)n;
+}
+
+AVIOContext* create_avio_from_ringbuffer(RingBuffer *rb, int buffer_size) {
+    uint8_t *avio_buf = av_malloc(buffer_size);
+    AVIOContext *avio = avio_alloc_context(
+        avio_buf, buffer_size,
+        0,                 // write_flag=0 => read only
+        rb,
+        RingBuffer_avio_read,    // read
+        NULL,              // write
+        NULL     // seek
+    );
+    return avio;
+}
+
 static void finalize_output_file(AVFormatContext *out_fmt_ctx) {
     av_write_trailer(out_fmt_ctx);
     if (!(out_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
@@ -64,6 +91,7 @@ void* Transmuxer_main (void *vself) {
     pthread_mutex_lock(&self->lock);
     while (wait_for_new_stream(self)) {
         AVFormatContext *in_fmt_ctx = NULL;
+        in_fmt_ctx->pb = create_avio_from_ringbuffer(self->stream, 4096);
         if (avformat_open_input(&in_fmt_ctx, NULL, NULL, NULL) < 0) {
             fprintf(stderr, "Could not open input file\n");
             abort();
@@ -143,7 +171,9 @@ void* Transmuxer_main (void *vself) {
         }
         printf("new ts: %ld\n", pts_time - segment_start_pts);
         finalize_output_file(out_fmt_ctx);
-
+        
+        av_free(in_fmt_ctx->pb->buffer);
+        avio_context_free(&in_fmt_ctx->pb);
         avformat_close_input(&in_fmt_ctx);
         RingBuffer_destroy(self->stream);
         self->stream = NULL;
