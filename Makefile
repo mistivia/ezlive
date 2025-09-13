@@ -2,6 +2,7 @@ CC := gcc
 CXX := g++
 CFLAGS := -g -Wall
 CXXFLAGS := -g -Wall -std=c++14
+LDFLAGS := -lavformat -lavutil -lavcodec
 
 C_SOURCES := $(shell find . -maxdepth 1 -name '*.c')
 CPP_SOURCES := $(shell find . -maxdepth 1 -name '*.cpp')
@@ -14,7 +15,7 @@ TARGET := ezlive
 all: $(TARGET)
 
 $(TARGET): $(C_OBJS) $(CPP_OBJS)
-	$(CXX) $(C_OBJS) $(CPP_OBJS) -o $@
+	$(CXX) $(C_OBJS) $(CPP_OBJS) -o $@ $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
