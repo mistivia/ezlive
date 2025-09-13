@@ -1,5 +1,6 @@
 #include "ringbuf.h"
 
+#include <pthread.h>
 #include <string.h>
 
 void RingBuffer_init(RingBuffer *self, size_t size) {
@@ -46,6 +47,7 @@ void RingBuffer_end(RingBuffer *self) {
     pthread_mutex_lock(&self->mutex);
     self->finished_flag = true;
     pthread_mutex_unlock(&self->mutex);
+    pthread_cond_signal(&self->not_empty_cond);
 }
 
 size_t RingBuffer_write(RingBuffer *self, const uint8_t *data, size_t len) {

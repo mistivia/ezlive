@@ -1,4 +1,4 @@
-#include "transmuxer.h"
+#include "transcode_talker.h"
 #include "ringbuf.h"
 
 #include <bits/pthreadtypes.h>
@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 
-static int wait_for_new_stream(Transmuxer *self) {
+static int wait_for_new_stream(TranscodeTalker *self) {
     while (pthread_cond_wait(&self->streaming_cond, &self->lock)) {
         if (self->quit) {
             return 0;
@@ -90,8 +90,8 @@ static void finalize_output_file(AVFormatContext *out_fmt_ctx) {
 
 #define SEGMENT_DURATION 5
 
-void* Transmuxer_main (void *vself) {
-    Transmuxer *self = vself;
+void* TranscodeTalker_main (void *vself) {
+    TranscodeTalker *self = vself;
     pthread_mutex_lock(&self->lock);
     while (wait_for_new_stream(self)) {
         AVFormatContext *in_fmt_ctx = avformat_alloc_context();
@@ -187,14 +187,14 @@ void* Transmuxer_main (void *vself) {
     return NULL;
 }
 
-void Transmuxer_init(Transmuxer *self) {
+void TranscodeTalker_init(TranscodeTalker *self) {
     pthread_mutex_init(&self->lock, NULL);
     pthread_cond_init(&self->streaming_cond, NULL);
     self->stream = NULL;
     self->quit = false;
 }
 
-void Transmuxer_new_stream(Transmuxer *self, RingBuffer *ringbuf) {
+void TranscodeTalker_new_stream(TranscodeTalker *self, RingBuffer *ringbuf) {
     pthread_mutex_lock(&self->lock);
     self->stream = ringbuf;
     pthread_mutex_unlock(&self->lock);

@@ -2,11 +2,11 @@
 
 #include "rtmpserver.h"
 #include "ringbuf.h"
-#include "transmuxer.h"
+#include "transcode_talker.h"
 
 typedef struct {
     RingBuffer *ringbuf;
-    Transmuxer transmuxer;
+    TranscodeTalker transcode_talker;
 } MainCtx;
 
 void on_rtmp_start(void *ctx) {
@@ -14,7 +14,7 @@ void on_rtmp_start(void *ctx) {
     main_ctx->ringbuf = malloc(sizeof(RingBuffer));
     RingBuffer_init(main_ctx->ringbuf, 4096);
     RingBuffer *rb = main_ctx->ringbuf;
-    Transmuxer_new_stream(&main_ctx->transmuxer, rb);
+    TranscodeTalker_new_stream(&main_ctx->transcode_talker, rb);
 
     RingBuffer_write_char(rb, 'F');
     RingBuffer_write_char(rb, 'L');
@@ -63,9 +63,9 @@ int main() {
         .on_stop = &on_rtmp_stop,
     };
 
-    Transmuxer_init(&main_ctx.transmuxer);
+    TranscodeTalker_init(&main_ctx.transcode_talker);
     pthread_t transmux_thread;
-    pthread_create(&transmux_thread, NULL, &Transmuxer_main, &main_ctx.transmuxer);
+    pthread_create(&transmux_thread, NULL, &TranscodeTalker_main, &main_ctx.transcode_talker);
 
     start_rtmpserver(rtmp_cbs, &main_ctx);
     return 0;
