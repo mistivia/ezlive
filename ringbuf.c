@@ -81,7 +81,7 @@ size_t RingBuffer_read(RingBuffer *self, uint8_t *data, size_t len) {
     pthread_mutex_lock(&self->mutex);
 
     while (read < len) {
-        while (RingBuffer_space(self) == 0) {
+        while (RingBuffer_size(self) == 0) {
             if (self->finished_flag) {
                 goto end;
             }
