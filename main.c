@@ -69,6 +69,7 @@ int main() {
 
     TranscodeTalker_init(&main_ctx.transcode_talker);
     s3_worker_init();
+    s3_worker_push(s3_clear_task());
 
     pthread_t transmux_thread;
     pthread_create(&transmux_thread, NULL, &TranscodeTalker_main, &main_ctx.transcode_talker);

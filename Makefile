@@ -2,7 +2,9 @@ CC := gcc
 CXX := g++
 CFLAGS := -g -Wall
 CXXFLAGS := -g -Wall -std=c++14
-LDFLAGS := -g -lavformat -lavutil -lavcodec
+LDFLAGS := -g \
+	-lavformat -lavutil -lavcodec \
+	-laws-cpp-sdk-core -laws-cpp-sdk-s3
 
 C_SOURCES := $(shell find . -maxdepth 1 -name '*.c')
 CPP_SOURCES := $(shell find . -maxdepth 1 -name '*.cpp')

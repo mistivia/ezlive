@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
 #include "task_queue.h"
+#include "s3_client.h"
 
 TaskQueue task_queue;
 
@@ -12,9 +14,11 @@ void exec_s3_task(void *vtask) {
     char obj_name_buf[256];
     S3Task *task = vtask;
     if (task->task_type == kUploadTask) {
-        // TODO
+        snprintf(obj_name_buf, 255, "%s%s", ezlive_config->s3_path, task->remote_name);
+        S3Client_put(task->local_file, obj_name_buf);
     } else if (task->task_type == kDeleteTask) {
-        // TODO
+        snprintf(obj_name_buf, 255, "%s%s", ezlive_config->s3_path, task->remote_name);
+        S3Client_delete(obj_name_buf);
     } else if (task->task_type == kClearTask) {
         // TODO
     } else {
@@ -26,7 +30,7 @@ void exec_s3_task(void *vtask) {
 }
 
 void s3_worker_init() {
-    s3client_init();
+    S3Client_init();
     TaskQueue_init(&task_queue, 128);
 }
 
