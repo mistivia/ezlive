@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "ezlive_config.h"
 #include "rtmpserver.h"
 #include "ringbuf.h"
 #include "transcode_talker.h"
@@ -57,7 +58,22 @@ void on_rtmp_audio(void *ctx, int64_t timestamp, char *buf, size_t size) {
     RingBuffer_write_word32be(rb, size + 11);
 }
 
-int main() {
+int main(int argc, char **argv) {
+    ezlive_config = malloc(sizeof(EZLiveConfig));
+    EZLiveConfig_init(ezlive_config);
+    if (argc == 1) {
+        EZLiveConfig_load(ezlive_config, "./config");
+    } else if (argc == 2) {
+        EZLiveConfig_load(ezlive_config, argv[1]);
+    } else {
+        fprintf(stderr, "wrong args.\n");
+        exit(-1);
+    }
+    int ret;
+    if ((ret = EZLiveConfig_validate(ezlive_config)) < 0) {
+        fprintf(stderr, "ezlive config error: %d.\n", ret);
+        exit(-1);
+    }
     srand((unsigned) time(NULL));
     MainCtx main_ctx;
     RtmpCallbacks rtmp_cbs = {

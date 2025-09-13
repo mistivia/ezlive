@@ -1,4 +1,4 @@
-#include "config.h"
+#include "ezlive_config.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -92,6 +92,10 @@ int EZLiveConfig_validate(EZLiveConfig *self) {
     if (!self->bucket || strlen(self->bucket) == 0) return -3;
     if (!self->endpoint || strlen(self->endpoint) == 0) return -4;
     if (!self->s3_path || strlen(self->s3_path) == 0) return -5;
+    if (self->s3_path[strlen(self->s3_path) - 1] != '/') {
+        fprintf(stderr, "invalid s3 path. path should end with '\'.\n");
+        return -10;
+    }
     if (!self->access_key || strlen(self->access_key) == 0) return -6;
     if (!self->secret_key || strlen(self->secret_key) == 0) return -7;
     if (self->listening_port <= 0 || self->listening_port > 65535) return -8;

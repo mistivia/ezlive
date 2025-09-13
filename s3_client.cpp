@@ -9,21 +9,21 @@
 #include <aws/s3/model/DeleteObjectRequest.h>
 #include <aws/core/auth/AWSCredentials.h>
 
-#include "config.h"
+#include "ezlive_config.h"
 
 #include <unistd.h>
 
 namespace {
 
 Aws::S3::S3Client *s3client;
-Aws::SDKOptions aws_options;
-Aws::S3::S3ClientConfiguration config;
-Aws::Auth::AWSCredentials credentials;
 
 }
 
 void S3Client_init() {
+    Aws::SDKOptions aws_options;
     Aws::InitAPI(aws_options);
+    Aws::S3::S3ClientConfiguration config;
+    Aws::Auth::AWSCredentials credentials;
     config.endpointOverride = ezlive_config->endpoint;
     config.region = ezlive_config->region;
     credentials = Aws::Auth::AWSCredentials(ezlive_config->access_key, ezlive_config->secret_key);

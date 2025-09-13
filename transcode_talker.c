@@ -2,7 +2,6 @@
 #include "fsutils.h"
 #include "ringbuf.h"
 
-#include <bits/pthreadtypes.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
 #include <libavutil/mem.h>
@@ -244,7 +243,7 @@ void* TranscodeTalker_main (void *vself) {
                     
                     // open new ts
                     segment_start_pts = pts_time;
-                    snprintf(out_filename, sizeof(out_filename), "segment_%03d.ts", segment_index);
+                    tmp_local_filename("/tmp/ezlive", out_filename);
                     output_stream = start_new_output_file(in_fmt_ctx, &out_fmt_ctx, out_filename, audio_stream_index, video_stream_index);
                 }
             }
