@@ -6,10 +6,18 @@
 #include <bits/pthreadtypes.h>
 
 typedef struct {
+    char *files[15];
+    double times[15];
+    int len;
+} HlsList;
+
+typedef struct {
     pthread_mutex_t lock;
     pthread_cond_t streaming_cond;
     RingBuffer *stream;
     bool quit;
+    HlsList lst;
+    time_t last_updated;
 } TranscodeTalker;
 
 void TranscodeTalker_init(TranscodeTalker *self);

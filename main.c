@@ -55,6 +55,7 @@ void on_rtmp_audio(void *ctx, int64_t timestamp, char *buf, size_t size) {
 }
 
 int main() {
+    srand((unsigned) time(NULL));
     MainCtx main_ctx;
     RtmpCallbacks rtmp_cbs = {
         .on_audio = &on_rtmp_audio,

@@ -1,4 +1,5 @@
 #include "transcode_talker.h"
+#include "fsutils.h"
 #include "ringbuf.h"
 
 #include <bits/pthreadtypes.h>
@@ -8,6 +9,38 @@
 #include <libavutil/timestamp.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+
+void HlsList_init(HlsList *lst) {
+    lst->len = 0;
+}
+
+char * HlsList_push(HlsList *lst, char *name, double time) {
+    name = strdup(name);
+    if (lst->len < 15) {
+        lst->files[lst->len] = name;
+        lst->times[lst->len] = time;
+        lst->len++;
+        return NULL;
+    }
+    free(lst->files[0]);
+    for (int i = 0; i < 14; i++) {
+        lst->files[i] = lst->files[i+1];
+        lst->times[i] = lst->times[i+1];
+    }
+    char *ret = lst->files[0];
+    lst->files[14] = name;
+    lst->times[14] = time;
+    return ret;
+}
+
+void HlsList_clear(HlsList *lst) {
+    for (int i = 0; i < lst->len; i++) {
+        free(lst->files[i]);
+    }
+    lst->len = 0;
+}
 
 
 static int wait_for_new_stream(TranscodeTalker *self) {
@@ -85,13 +118,58 @@ static void finalize_output_file(AVFormatContext *out_fmt_ctx) {
         avio_closep(&out_fmt_ctx->pb);
     }
     avformat_free_context(out_fmt_ctx);
-    // TODO: update m3u8
 }
 
 #define SEGMENT_DURATION 5
 
-void* TranscodeTalker_main (void *vself) {
+static void update_m3u8(HlsList *lst, int last_seg) {
+    int first_seg = last_seg - lst->len + 1;
+    char out_filename[256];
+    tmp_local_filename("/tmp/ezlive", out_filename);
+    FILE *fp = fopen(out_filename, "w");
+    if (lst->len == 0) {
+        fprintf(fp, "\n");
+    } else {
+        fprintf(fp, "#EXTM3U\n");
+        fprintf(fp, "#EXT-X-VERSION:3\n");
+        fprintf(fp, "#EXT-X-TARGETDURATION:10\n");
+        fprintf(fp, "#EXT-X-MEDIA-SEQUENCE:%d\n", first_seg);
+        for (int i = 0; i < lst->len; i++) {
+            fprintf(fp, "#EXTINF:%lf\n", lst->times[i]);
+            fprintf(fp, "%s\n", lst->files[i]);
+        }
+    }
+    fclose(fp);
+    upload_file(out_filename, "stream.m3u8");
+}
+
+static void* check_timer(void *vself) {
     TranscodeTalker *self = vself;
+    while (1) {
+        sleep(15);
+        time_t now;
+        time(&now);
+        pthread_mutex_lock(&self->lock);
+        if (self->lst.len > 0 && now - self->last_updated > 60) {
+            for (int i = 0; i < self->lst.len; i++) {
+                remove_remote(self->lst.files[i]);
+            }
+            HlsList_clear(&self->lst);
+            update_m3u8(&self->lst, -1);
+        }
+        pthread_mutex_unlock(&self->lock);
+    }
+    return NULL;   
+}
+
+void* TranscodeTalker_main (void *vself) {
+    char remote_prefix[9];
+    char remote_filename[256];
+    TranscodeTalker *self = vself;
+    int segment_index = 0;
+    tmp_ts_prefix(remote_prefix);
+    pthread_t check_thread;
+    pthread_create(&check_thread, NULL, check_timer, self);
     pthread_mutex_lock(&self->lock);
     while (wait_for_new_stream(self)) {
         AVFormatContext *in_fmt_ctx = avformat_alloc_context();
@@ -99,12 +177,12 @@ void* TranscodeTalker_main (void *vself) {
         const AVInputFormat *flv_fmt = av_find_input_format("flv");
         if (avformat_open_input(&in_fmt_ctx, NULL, flv_fmt, NULL) < 0) {
             fprintf(stderr, "Could not open input file\n");
-            abort();
+            continue;
         }
 
         if (avformat_find_stream_info(in_fmt_ctx, NULL) < 0) {
             fprintf(stderr, "Could not find stream info\n");
-            abort();
+            continue;
         }
 
         int video_stream_index = -1, audio_stream_index = -1;
@@ -117,20 +195,18 @@ void* TranscodeTalker_main (void *vself) {
 
         if (video_stream_index < 0) {
             fprintf(stderr, "No video stream found\n");
-            abort();
+            continue;
         }
         if (audio_stream_index < 0) {
             fprintf(stderr, "No audio stream found\n");
-            abort();
+            continue;
         }
 
         AVFormatContext *out_fmt_ctx = NULL;
-        int segment_index = 0;
         int64_t segment_start_pts = 0;
 
         char out_filename[256];
-        snprintf(out_filename, sizeof(out_filename), "segment_%03d.ts", segment_index);
-
+        tmp_local_filename("/tmp/ezlive", out_filename);
 
         int64_t pts_time;
         AVPacket pkt;
@@ -155,10 +231,18 @@ void* TranscodeTalker_main (void *vself) {
                 if (pkt.stream_index == video_stream_index && (pkt.flags & AV_PKT_FLAG_KEY)) {
                     // close current ts
                     printf("new ts: %ld\n", pts_time - segment_start_pts);
+                    time_t now;
+                    time(&now);
+                    self->last_updated = now;
                     finalize_output_file(out_fmt_ctx);
+                    ts_filename(remote_prefix, segment_index, remote_filename);
+                    upload_file(out_filename, remote_filename);
+                    char *deleted = HlsList_push(&self->lst, remote_filename, (pts_time - segment_start_pts) / (double)AV_TIME_BASE);
+                    update_m3u8(&self->lst, segment_index);
+                    remove_remote(deleted);
+                    segment_index++;
                     
                     // open new ts
-                    segment_index++;
                     segment_start_pts = pts_time;
                     snprintf(out_filename, sizeof(out_filename), "segment_%03d.ts", segment_index);
                     output_stream = start_new_output_file(in_fmt_ctx, &out_fmt_ctx, out_filename, audio_stream_index, video_stream_index);
@@ -174,7 +258,17 @@ void* TranscodeTalker_main (void *vself) {
             av_packet_unref(&pkt);
         }
         printf("new ts: %ld\n", pts_time - segment_start_pts);
+
         finalize_output_file(out_fmt_ctx);
+        time_t now;
+        time(&now);
+        self->last_updated = now;
+        ts_filename(remote_prefix, segment_index, remote_filename);
+        upload_file(out_filename, remote_filename);
+        char *deleted = HlsList_push(&self->lst, remote_filename, (pts_time - segment_start_pts) / (double)AV_TIME_BASE);
+        update_m3u8(&self->lst, segment_index);
+        remove_remote(deleted);
+        segment_index++;
 
         av_free(in_fmt_ctx->pb->buffer);
         avio_context_free(&in_fmt_ctx->pb);
@@ -192,6 +286,7 @@ void TranscodeTalker_init(TranscodeTalker *self) {
     pthread_cond_init(&self->streaming_cond, NULL);
     self->stream = NULL;
     self->quit = false;
+    HlsList_init(&self->lst);
 }
 
 void TranscodeTalker_new_stream(TranscodeTalker *self, RingBuffer *ringbuf) {
