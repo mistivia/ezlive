@@ -9,7 +9,6 @@ typedef struct {
     const char *s3_path;
     const char *access_key;
     const char *secret_key;
-    const char *web_endpoint;
     const char *region;
 } EZLiveConfig;
 

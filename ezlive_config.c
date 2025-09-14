@@ -23,10 +23,9 @@ void EZLiveConfig_init(EZLiveConfig *self) {
     self->listening_port = 1935;
     self->bucket = NULL;
     self->endpoint = NULL;
-    self->s3_path = NULL;
+    self->s3_path = strdup("ezlive/");
     self->access_key = NULL;
     self->secret_key = NULL;
-    self->web_endpoint = NULL;
     self->region = strdup("auto");
 }
 
@@ -76,8 +75,6 @@ void EZLiveConfig_load(EZLiveConfig *self, const char *filename) {
             set_field(&self->access_key, val);
         } else if (strcmp(key, "secret_key") == 0) {
             set_field(&self->secret_key, val);
-        } else if (strcmp(key, "web_endpoint") == 0) {
-            set_field(&self->web_endpoint, val);
         } else if (strcmp(key, "region") == 0) {
             set_field(&self->region, val);
         }
@@ -91,7 +88,7 @@ int EZLiveConfig_validate(EZLiveConfig *self) {
     if (!self->listening_addr || strlen(self->listening_addr) == 0) return -2;
     if (!self->bucket || strlen(self->bucket) == 0) return -3;
     if (!self->endpoint || strlen(self->endpoint) == 0) return -4;
-    if (!self->s3_path || strlen(self->s3_path) == 0) return -5;
+    if (!self->s3_path || strlen(self->s3_path) < 2) return -5;
     if (self->s3_path[strlen(self->s3_path) - 1] != '/') {
         fprintf(stderr, "invalid s3 path. path should end with '\'.\n");
         return -10;

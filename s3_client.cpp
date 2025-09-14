@@ -1,5 +1,6 @@
 #include "s3_client.h"
 
+#include <stdio.h>
 #include <fstream>
 #include <iostream>
 
@@ -34,15 +35,12 @@ void S3Client_put(const char *filename, const char *object_name) {
     while (1) {
         Aws::S3::Model::PutObjectRequest request;
         request.SetBucket(ezlive_config->bucket);
-        //We are using the name of the file as the key for the object in the bucket.
-        //However, this is just a string and can be set according to your retrieval needs.
         request.SetKey(object_name);
-
         std::shared_ptr<Aws::IOStream> inputData =
                 std::make_shared<Aws::FStream>(filename, std::ios_base::in | std::ios_base::binary);
 
         if (!*inputData) {
-            std::cerr << "Error unable to read file " << filename << std::endl;
+            fprintf(stderr, "Error unable to read file: %s\n", filename);
             return;
         }
 
@@ -52,13 +50,11 @@ void S3Client_put(const char *filename, const char *object_name) {
                 s3client->PutObject(request);
 
         if (!outcome.IsSuccess()) {
-            std::cerr << "Error: putObject: " <<
-                    outcome.GetError().GetMessage() << std::endl;
+            fprintf(stderr, "Error: putObject: %s.\n", outcome.GetError().GetMessage().c_str());
             sleep(3);
             continue;
         } else {
-            std::cout << "Added object '" << object_name << "' to bucket '"
-                    << ezlive_config->bucket << "'.";
+            printf("Added object '%s' to bucket '%s'.\n", object_name, ezlive_config->bucket);
             break;
         }
     }
@@ -75,9 +71,9 @@ void S3Client_delete(const char *object_name) {
 
     if (!outcome.IsSuccess()) {
         auto err = outcome.GetError();
-        std::cerr << "Error: deleteObject: " <<
-                  err.GetExceptionName() << ": " << err.GetMessage() << std::endl;
+        fprintf(stderr, "Error: deleteObject: %s: %s\n",
+            err.GetExceptionName().c_str(), err.GetMessage().c_str());
     } else {
-        std::cout << "Successfully deleted the object: " << object_name << std::endl;
+        fprintf(stdout, "Successfully deleted the object: %s\n", object_name);
     }
 }

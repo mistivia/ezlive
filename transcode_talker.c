@@ -126,6 +126,10 @@ static void update_m3u8(HlsList *lst, int last_seg) {
     char out_filename[256];
     tmp_local_filename("/tmp/ezlive", out_filename);
     FILE *fp = fopen(out_filename, "w");
+    if (fp == NULL) {
+        fprintf(stderr, "failed to open %s for output.\n", out_filename);
+        exit(-1);
+    }
     if (lst->len == 0) {
         fprintf(fp, "\n");
     } else {
@@ -247,6 +251,14 @@ void* TranscodeTalker_main (void *vself) {
                     segment_start_pts = pts_time;
                     tmp_local_filename("/tmp/ezlive", out_filename);
                     output_stream = start_new_output_file(in_fmt_ctx, &out_fmt_ctx, out_filename, audio_stream_index, video_stream_index);
+                    if (pkt.stream_index == video_stream_index)
+                        out_stream = output_stream.video_stream;
+                    else if (pkt.stream_index == audio_stream_index)
+                        out_stream = output_stream.audio_stream;
+                    else {
+                        av_packet_unref(&pkt);
+                        continue;
+                    }
                 }
             }
             pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);

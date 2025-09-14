@@ -4,3 +4,4 @@ ezlive
 *.ts
 *.m3u8
 a.out
+config
