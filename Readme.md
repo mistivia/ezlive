@@ -48,6 +48,36 @@ Then use a HLS player to load `https://YOUR_BUCKET_NAME.our-oss.com/ezlive/strea
 If you don't know how to setup a HLS player, then make sure you have added `https://mistivia.github.io` in your OSS's CORS setting, then open `https://mistivia.github.io/ezlive#https://YOUR_BUCKET_NAME.our-oss.com/ezlive/stream.m3u8`.
 
 
+# Docker Usage
+
+Download the docker image tarball in [release](https://github.com/mistivia/ezlive/releases).
+
+Load the docker image:
+
+    cat ezlive-docker-image.tar.gz | gzip -d | sudo docker load
+
+Create a directory `conf`:
+
+    mkdir conf
+
+Create a config file `conf/config`, the config file is nearly the same as the config above. But for docker, the `listening_addr` should be `0.0.0.0`:
+
+    listening_addr=0.0.0.0
+    listening_port=1935
+    bucket=YOUR_BUCKET_NAME
+    endpoint=https://your-oss.com
+    s3_path=ezlive/
+    access_key=YOUR_S3_ACCESS_KEY
+    secret_key=YOUR_S3_SECRET_KEY
+    region=auto
+
+Start docker container:
+
+    sudo docker run -it --rm \
+        -v ./conf:/etc/ezlive/ \
+        -p 127.0.0.1:1935:1935 \
+        localhost/ezlive    
+
 # Credits
 
 The built-in RTMP server is modified from [pine](https://github.com/deboot/pine).
