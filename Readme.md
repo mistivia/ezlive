@@ -41,8 +41,13 @@ Start EZLive:
 ./ezlive
 ```
 
-Open OBS, streaming to `rtmp://127.0.0.1/live`， no streaming key needed.
+Open OBS, streaming to `rtmp://127.0.0.1/live`, no streaming key needed. The streaming format must be H.264 + AAC.
 
 Then use a HLS player to load `https://YOUR_BUCKET_NAME.our-oss.com/ezlive/stream.m3u8` to watch the stream.
 
 If you don't know how to setup a HLS player, then make sure you have added `https://mistivia.github.io` in your OSS's CORS setting, then open `https://mistivia.github.io/ezlive#https://YOUR_BUCKET_NAME.our-oss.com/ezlive/stream.m3u8`.
+
+
+# Credits
+
+The built-in RTMP server is modified from [pine](https://github.com/deboot/pine).
