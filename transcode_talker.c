@@ -238,7 +238,9 @@ void* TranscodeTalker_main (void *vself) {
                     upload_file(out_filename, remote_filename);
                     char *deleted = HlsList_push(&self->lst, remote_filename, (pts_time - segment_start_pts) / (double)AV_TIME_BASE);
                     update_m3u8(&self->lst, segment_index);
-                    remove_remote(deleted);
+                    if (deleted != NULL) {
+                        remove_remote(deleted);
+                    }
                     segment_index++;
                     
                     // open new ts
@@ -266,7 +268,9 @@ void* TranscodeTalker_main (void *vself) {
         upload_file(out_filename, remote_filename);
         char *deleted = HlsList_push(&self->lst, remote_filename, (pts_time - segment_start_pts) / (double)AV_TIME_BASE);
         update_m3u8(&self->lst, segment_index);
-        remove_remote(deleted);
+        if (deleted != NULL) {
+            remove_remote(deleted);
+        }
         segment_index++;
 
         av_free(in_fmt_ctx->pb->buffer);
