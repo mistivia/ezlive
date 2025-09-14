@@ -8,7 +8,9 @@
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/PutObjectRequest.h>
 #include <aws/s3/model/DeleteObjectRequest.h>
+#include <aws/s3/model/DeleteObjectsRequest.h>
 #include <aws/core/auth/AWSCredentials.h>
+#include <aws/s3/model/ListObjectsV2Request.h>
 
 #include "ezlive_config.h"
 
@@ -75,5 +77,47 @@ void S3Client_delete(const char *object_name) {
             err.GetExceptionName().c_str(), err.GetMessage().c_str());
     } else {
         fprintf(stdout, "Successfully deleted the object: %s\n", object_name);
+    }
+}
+
+void S3Client_clear() {
+    Aws::S3::Model::ListObjectsV2Request list_req;
+    list_req.WithBucket(ezlive_config->bucket).WithPrefix(ezlive_config->s3_path);
+
+    auto list_outcome = s3client->ListObjectsV2(list_req);
+    if (!list_outcome.IsSuccess()) {
+        fprintf(stderr, "ListObjectsV2 error: %s\n", 
+            list_outcome.GetError().GetMessage().c_str());
+        return;
+    }
+
+    Aws::Vector<Aws::S3::Model::ObjectIdentifier> objects_to_delete;
+
+    for (const auto& obj : list_outcome.GetResult().GetContents()) {
+        auto key = obj.GetKey();
+        if (key.size() >= 3 && key.substr(key.size() - 3) == ".ts") {
+            Aws::S3::Model::ObjectIdentifier oid;
+            oid.SetKey(key);
+            objects_to_delete.push_back(oid);
+            printf("Marking for delete: %s\n", key.c_str());
+        }
+    }
+    if (!objects_to_delete.empty()) {
+        Aws::S3::Model::DeleteObjectsRequest del_req;
+        del_req.WithBucket(ezlive_config->bucket)
+                .WithDelete(Aws::S3::Model::Delete().WithObjects(objects_to_delete));
+
+        auto del_outcome = s3client->DeleteObjects(del_req);
+        if (!del_outcome.IsSuccess()) {
+            std::cerr << "DeleteObjects error: " 
+                        << del_outcome.GetError().GetMessage() << std::endl;
+            return;
+        } else {
+            std::cout << "Deleted " 
+                        << del_outcome.GetResult().GetDeleted().size() 
+                        << " objects." << std::endl;
+        }
+    } else {
+        std::cout << "No .ts files found. No need to clear." << std::endl;
     }
 }

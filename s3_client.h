@@ -11,6 +11,8 @@ void S3Client_put(const char *filename, const char *object_name);
 
 void S3Client_delete(const char *object_name);
 
+void S3Client_clear();
+
 #ifdef __cplusplus
 }
 #endif

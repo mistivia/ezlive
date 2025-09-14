@@ -21,7 +21,7 @@ void exec_s3_task(void *vtask) {
         snprintf(obj_name_buf, 255, "%s%s", ezlive_config->s3_path, task->remote_name);
         S3Client_delete(obj_name_buf);
     } else if (task->task_type == kClearTask) {
-        // TODO
+        S3Client_clear();
     } else {
         fprintf(stderr, "unknown task type.\n");
     }
