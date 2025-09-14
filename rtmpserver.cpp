@@ -15,8 +15,13 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <arpa/inet.h>
 
 #include "rtmpserver.h"
+
+extern "C" {
+#include "ezlive_config.h"
+}
 
 #define APP_NAME	"live"
 
@@ -790,8 +795,13 @@ void start_rtmpserver(RtmpCallbacks cbs, void *ctx) {
     	}
         sockaddr_in sin;
         sin.sin_family = AF_INET;
-        sin.sin_port = htons(PORT);
-        sin.sin_addr.s_addr = INADDR_ANY;
+        sin.sin_port = htons(ezlive_config->listening_port);
+		struct in_addr addr;
+		if (inet_pton(AF_INET, ezlive_config->listening_addr, &addr) <= 0) {
+			fprintf(stderr, "Invalid IP address\n");
+			exit(-1);
+		}
+        sin.sin_addr.s_addr = addr.s_addr;
         if (bind(listen_fd, (sockaddr *) &sin, sizeof sin) < 0) {
             throw std::runtime_error(strf("Unable to listen: %s",strerror(errno)));
             return;
