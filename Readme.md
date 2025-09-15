@@ -78,6 +78,12 @@ Start docker container:
         -p 127.0.0.1:1935:1935 \
         localhost/ezlive    
 
+# Windows
+
+For windows users, there is a windows build using MSYS2. See [release](https://github.com/mistivia/ezlive/releases).
+
+To start using, unzip the windows tarball, create a `config` file in the same directory as `ezlive.exe`, and run `ezlive.exe`.
+
 # Credits
 
 The built-in RTMP server is modified from [pine](https://github.com/deboot/pine).
