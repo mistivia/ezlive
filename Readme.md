@@ -47,6 +47,9 @@ Then use a HLS player to load `https://YOUR_BUCKET_NAME.our-oss.com/ezlive/strea
 
 If you don't know how to setup a HLS player, then make sure you have added `https://mistivia.github.io` in your OSS's CORS setting, then open `https://mistivia.github.io/ezlive#https://YOUR_BUCKET_NAME.our-oss.com/ezlive/stream.m3u8`.
 
+# WARNING
+
+The Docker and Windows binary builds were done on my laptop. While I promise I have no malicious intent, this does not guarantee that my build environment is secure, so is the build target. If you truly care about your privacy and security, please make sure to build from source yourself.
 
 # Docker Usage
 
