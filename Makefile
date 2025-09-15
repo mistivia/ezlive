@@ -16,6 +16,11 @@ TARGET := ezlive
 
 all: $(TARGET)
 
+docker: ezlive-docker-image.tar.gz
+
+ezlive-docker-image.tar.gz: all
+	sh ./scripts/build-docker.sh
+
 $(TARGET): $(C_OBJS) $(CPP_OBJS)
 	$(CXX) $(C_OBJS) $(CPP_OBJS) -o $@ $(LDFLAGS)
 
