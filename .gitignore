@@ -7,5 +7,4 @@ a.out
 config
 rootfs
 conf
-Dockerfile
 *.tar.gz
