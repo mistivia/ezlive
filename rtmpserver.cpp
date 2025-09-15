@@ -373,8 +373,6 @@ void handle_setdataframe(Client *client, Decoder *dec)
            throw std::runtime_error("not a publisher");
     }
 
-    printf( "client paht is %s",client->path.c_str());
-
 	std::string type = amf_load_string(dec);
 	if (type != "onMetaData") {
 		throw std::runtime_error("can only set metadata");

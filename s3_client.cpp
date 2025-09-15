@@ -93,31 +93,18 @@ void S3Client_clear() {
         return;
     }
 
-    Aws::Vector<Aws::S3::Model::ObjectIdentifier> objects_to_delete;
+    std::vector<std::string> objects_to_delete;
 
     for (const auto& obj : list_outcome.GetResult().GetContents()) {
         auto key = obj.GetKey();
         if (key.size() >= 3 && key.substr(key.size() - 3) == ".ts") {
-            Aws::S3::Model::ObjectIdentifier oid;
-            oid.SetKey(key);
-            objects_to_delete.push_back(oid);
+            objects_to_delete.push_back(key);
             printf("Marking for delete: %s\n", key.c_str());
         }
     }
     if (!objects_to_delete.empty()) {
-        Aws::S3::Model::DeleteObjectsRequest del_req;
-        del_req.WithBucket(ezlive_config->bucket)
-                .WithDelete(Aws::S3::Model::Delete().WithObjects(objects_to_delete));
-
-        auto del_outcome = s3client->DeleteObjects(del_req);
-        if (!del_outcome.IsSuccess()) {
-            std::cerr << "DeleteObjects error: " 
-                        << del_outcome.GetError().GetMessage() << std::endl;
-            return;
-        } else {
-            std::cout << "Deleted " 
-                        << del_outcome.GetResult().GetDeleted().size() 
-                        << " objects." << std::endl;
+        for (auto &x : objects_to_delete) {
+            S3Client_delete(x.c_str());
         }
     } else {
         std::cout << "No .ts files found. No need to clear." << std::endl;
