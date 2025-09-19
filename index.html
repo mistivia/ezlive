@@ -86,7 +86,7 @@
         return result;
     }
 
-    let iframeUrl = "./hls.html" + location.hash; 
+    let iframeUrl = "./hls.html" + location.hash + "?t=" + randomString(8); 
     let iframe = document.createElement("iframe");
     iframe.id = "iframe1";
     iframe.src = iframeUrl;
