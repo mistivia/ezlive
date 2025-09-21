@@ -772,6 +772,12 @@ void do_poll(void)
 				--i;
 			}
 		}
+		if ((poll_table[i].revents & POLLHUP)
+				|| (poll_table[i].revents & POLLERR)) {
+			fprintf(stderr, "client error.\n");
+			close_client(client, i);
+			--i;
+		}
 	}
 }
 
