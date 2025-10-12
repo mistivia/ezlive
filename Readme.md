@@ -90,3 +90,5 @@ To start using, unzip the windows tarball, create a `config` file in the same di
 # Credits
 
 The built-in RTMP server is modified from [pine](https://github.com/deboot/pine).
+
+Thank [@uonr](https://github.com/uonr) for making nix flake.
