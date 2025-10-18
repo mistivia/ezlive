@@ -91,9 +91,13 @@
     iframe.id = "iframe1";
     iframe.src = iframeUrl;
     document.body.appendChild(iframe);
+    let chatUrl = function () {
+      // return "https://hack.chat?" + "ezl" + fnv1a64(location.hash) + '#' + randomString(8);
+      return "https://raye.mistivia.com/irc#" + "ezl" + fnv1a64(location.hash);
+    };
 
 
-    iframeUrl = "https://hack.chat?" + "ezl" + fnv1a64(location.hash) + '#' + randomString(8); 
+    iframeUrl = chatUrl();
     iframe = document.createElement("iframe");
     iframe.id = "iframe2";
     iframe.src = iframeUrl;
@@ -112,8 +116,7 @@
         `.replace(/\s+/g, '');
         const popup = window.open(url, "popupWindow", windowFeatures);
     }
-
-    let popupUrl = "https://hack.chat?" + "ezl" + fnv1a64(location.hash) + '#' + randomString(8); 
+    let popupUrl = chatUrl();
     function popup() {
         openPopup(popupUrl);
     }
