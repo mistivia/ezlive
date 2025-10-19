@@ -15,7 +15,7 @@
         const checkPoint = duration - 60;
         const targetTime = duration - 30;
         if (currentTime < checkPoint) {
-            videoElement.currentTime = seekTo;
+            videoElement.currentTime = targetTime ;
         }
       }
       setInterval(function () {checkAndAdjustVideoTime()}, 5000);
