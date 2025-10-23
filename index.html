@@ -95,6 +95,10 @@
       // return "https://hack.chat?" + "ezl" + fnv1a64(location.hash) + '#' + randomString(8);
       return 'https://raye.mistivia.com/irc/auto.html?nick=u' + randomString(8) + '#ezl' + fnv1a64(location.hash);
     };
+    let popUrl = function () {
+      // return "https://hack.chat?" + "ezl" + fnv1a64(location.hash) + '#' + randomString(8);
+      return './chat.html?nick=u' + randomString(8) + '#ezl' + fnv1a64(location.hash);
+    };
 
 
     iframeUrl = chatUrl();
@@ -116,7 +120,7 @@
         `.replace(/\s+/g, '');
         const popup = window.open(url, "popupWindow", windowFeatures);
     }
-    let popupUrl = chatUrl();
+    let popupUrl = popUrl();
     function popup() {
         openPopup(popupUrl);
     }
