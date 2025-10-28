@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 #include "rtmpserver.h"
 
@@ -48,6 +49,7 @@ struct Client {
 	size_t chunk_len;
 	uint32_t written_seq;
 	uint32_t read_seq;
+	int64_t livets;
 };
 
 namespace {
@@ -681,6 +683,9 @@ Client *new_client()
 	client->written_seq = 0;
 	client->read_seq = 0;
 	client->chunk_len = DEFAULT_CHUNK_LEN;
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	client->livets = ts.tv_sec;
 	for (int i = 0; i < 64; ++i) {
 		client->messages[i].timestamp = 0;
 		client->messages[i].len = 0;
@@ -760,21 +765,38 @@ void do_poll(void)
 				--i;
 				continue;
 			}
+			struct timespec ts;
+			clock_gettime(CLOCK_MONOTONIC, &ts);
+			client->livets = ts.tv_sec;
 		}
 		if (poll_table[i].revents & POLLIN) {
 			if (client == NULL) {
 				new_client();
-			} else try {
-				recv_from_client(client);
-			} catch (const std::runtime_error &e) {
-				printf("client error: %s\n", e.what());
-				close_client(client, i);
-				--i;
+			} else {
+				try {
+					recv_from_client(client);
+				} catch (const std::runtime_error &e) {
+					printf("client error: %s\n", e.what());
+					close_client(client, i);
+					--i;
+					continue;
+				}
+				struct timespec ts;
+				clock_gettime(CLOCK_MONOTONIC, &ts);
+				client->livets = ts.tv_sec;
 			}
 		}
 		if ((poll_table[i].revents & POLLHUP)
 				|| (poll_table[i].revents & POLLERR)) {
 			fprintf(stderr, "client error.\n");
+			close_client(client, i);
+			--i;
+			continue;
+		}
+		struct timespec ts;
+		clock_gettime(CLOCK_MONOTONIC, &ts);
+		if (client != NULL && ts.tv_sec - client->livets > 90) {
+			fprintf(stderr, "client timeout.\n");
 			close_client(client, i);
 			--i;
 		}
