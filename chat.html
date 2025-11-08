@@ -43,22 +43,45 @@
     <iframe id="dynamicIframe" title="Embedded Content"></iframe>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const iframe = document.getElementById('dynamicIframe');
-            const loadingScreen = document.getElementById('loading');
-            const queryString = window.location.search; 
-            const hashString = window.location.hash;
-            const baseUrl = "https://raye.mistivia.com/irc/auto.html";
-            const finalUrl = baseUrl + queryString + hashString;
-            iframe.src = finalUrl;
-            iframe.onload = function() {
-                loadingScreen.style.display = 'none';
-            };
-            iframe.onerror = function() {
-                loadingScreen.innerHTML = 'Load failed.';
-                loadingScreen.style.backgroundColor = '#ffdddd';
-            };
-        });
+        async function getHash(message) {
+            const algorithm = 'SHA-256'
+            const encoder = new TextEncoder();
+            const data = encoder.encode(message);
+            const hashBuffer = await crypto.subtle.digest(algorithm, data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+            return hashHex;
+        }
+        async function main() {
+            const params = new URLSearchParams(window.location.search);
+            let key = params.get('key');
+            if (key === null) key = '';
+            let keyHash = await getHash(key);
+            let useSharkChat = keyHash === '31fc15942b0c47f6c6408dd933a830b25dae3d9a0262dafe64d12e4492207e47';
+            if (!useSharkChat) {
+                return;
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                const iframe = document.getElementById('dynamicIframe');
+                const loadingScreen = document.getElementById('loading');
+                const queryString = window.location.search; 
+                const hashString = window.location.hash;
+                const baseUrl = "https://raye.mistivia.com/irc/auto.html";
+                const finalUrl = baseUrl + queryString + hashString;
+                iframe.src = finalUrl;
+                iframe.onload = function() {
+                    loadingScreen.style.display = 'none';
+                };
+                iframe.onerror = function() {
+                    loadingScreen.innerHTML = 'Load failed.';
+                    loadingScreen.style.backgroundColor = '#ffdddd';
+                };
+            });
+        }
+        main();
+
     </script>
 
 </body>
