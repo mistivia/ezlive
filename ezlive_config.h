@@ -10,6 +10,7 @@ typedef struct {
     const char *access_key;
     const char *secret_key;
     const char *region;
+    const char *key;
 } EZLiveConfig;
 
 extern EZLiveConfig *ezlive_config;

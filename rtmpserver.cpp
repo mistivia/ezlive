@@ -234,12 +234,10 @@ void handle_connect(Client *client, double txid, Decoder *dec)
 
 	send_reply(client, txid, version, status);
 
-/*
 	uint32_t chunk_len = htonl(1024);
 	std::string set_chunk((char *) &chunk_len, 4);
-	rtmp_send(client, MSG_SET_CHUNK, CONTROL_ID, set_chunk, 0,
-		  MEDIA_CHANNEL);
-
+	rtmp_send(client, MSG_SET_CHUNK, CONTROL_ID, set_chunk);
+/*
 	client->chunk_len = 1024;
 */
 }
@@ -260,6 +258,14 @@ void handle_fcpublish(Client *client, double txid, Decoder *dec)
 
 	std::string path = amf_load_string(dec);
 	debug("fcpublish %s\n", path.c_str());
+	printf("fcpublish %s\n", path.c_str());
+	if (strlen(ezlive_config->key) > 0) {
+		if (strcmp(ezlive_config->key, path.c_str()) != 0) {
+			publishernum = 0;
+			printf( "wrong live key.\n");
+			throw std::runtime_error{"wrong live key."};
+		}
+	}
 
     client->path = path;
 
@@ -795,7 +801,7 @@ void do_poll(void)
 		}
 		struct timespec ts;
 		clock_gettime(CLOCK_MONOTONIC, &ts);
-		if (client != NULL && ts.tv_sec - client->livets > 90) {
+		if (client != NULL && ts.tv_sec - client->livets > 60) {
 			fprintf(stderr, "client timeout.\n");
 			close_client(client, i);
 			--i;

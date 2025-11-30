@@ -31,6 +31,7 @@ s3_path=ezlive/
 access_key=YOUR_S3_ACCESS_KEY
 secret_key=YOUR_S3_SECRET_KEY
 region=auto
+key=your_live_key
 ```
 
 In the dashboard of your object storage provider, add the domain name of your web HLS player to CORS setting. If you don't know how to setup a web HLS player, just add `https://mistivia.github.io`.
@@ -73,6 +74,7 @@ Create a config file `conf/config`, the config file is nearly the same as the co
     access_key=YOUR_S3_ACCESS_KEY
     secret_key=YOUR_S3_SECRET_KEY
     region=auto
+    key=your_live_key
 
 Start docker container:
 

@@ -27,6 +27,7 @@ void EZLiveConfig_init(EZLiveConfig *self) {
     self->access_key = NULL;
     self->secret_key = NULL;
     self->region = strdup("auto");
+    self->key = strdup("");
 }
 
 static void set_field(const char **field, const char *value) {
@@ -77,6 +78,8 @@ void EZLiveConfig_load(EZLiveConfig *self, const char *filename) {
             set_field(&self->secret_key, val);
         } else if (strcmp(key, "region") == 0) {
             set_field(&self->region, val);
+        } else if (strcmp(key, "key") == 0) {
+            set_field(&self->key, val);
         }
     }
 
