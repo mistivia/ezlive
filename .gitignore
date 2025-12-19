@@ -10,3 +10,4 @@ conf
 *.tar.gz
 podman-start.sh
 config.back
+nohup.out
