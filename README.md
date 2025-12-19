@@ -8,6 +8,7 @@ It runs a local SRT server, receive live video, turns it into HLS segments (.m3u
 
 Install dependencies:
 
+- [SRT](https://github.com/Haivision/srt)
 - FFMpeg (libavformat, libavutil, libavcodec)
 - AWS C++ SDK (libaws-cpp-sdk-core, libaws-cpp-sdk-s3)
 
