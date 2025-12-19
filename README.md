@@ -99,7 +99,7 @@ Create a directory `conf`:
 Create a config file `conf/config`, the config file is nearly the same as the config above. But for docker, the `listening_addr` should be `0.0.0.0`:
 
     listening_addr=0.0.0.0
-    listening_port=1935
+    listening_port=61935
     bucket=YOUR_BUCKET_NAME
     endpoint=https://your-s3.com
     s3_path=ezlive/
@@ -112,8 +112,8 @@ Start docker container:
 
     sudo docker run -it --rm \
         -v ./conf:/etc/ezlive/ \
-        -p 127.0.0.1:1935:1935 \
-        localhost/ezlive    
+        -p 127.0.0.1:61935:61935/udp \
+        localhost/ezlive
 
 # Windows
 
