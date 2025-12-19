@@ -2,7 +2,7 @@
 
 EZLive is a minimal self-hosted livestream solution built on top of S3-compatible object storage.
 
-It runs a local RTMP server, receive live video, turns it into HLS segments (.m3u8 + .ts) and serves them as static files through any S3-compatible object storage. No dedicated streaming server is required — everything runs serverlessly. Then you can easily setup a HTML5 HLS player to watch the stream.
+It runs a local SRT server, receive live video, turns it into HLS segments (.m3u8 + .ts) and serves them as static files through any S3-compatible object storage. No dedicated streaming server is required — everything runs serverlessly. Then you can easily setup a HTML5 HLS player to watch the stream.
 
 # Build
 
@@ -24,7 +24,7 @@ Then create a config file `config`:
 
 ```
 listening_addr=127.0.0.1
-listening_port=1935
+listening_port=61935
 bucket=YOUR_BUCKET_NAME
 endpoint=https://your-s3.com
 s3_path=ezlive/
@@ -74,7 +74,7 @@ Start EZLive:
 ./ezlive
 ```
 
-Open OBS, streaming to `rtmp://127.0.0.1/live`, no streaming key needed. The streaming format must be H.264 + AAC.
+Open OBS, streaming to `srt://127.0.0.1:61935`, with streaming key. The streaming format must be H.264 + AAC.
 
 Then use a HLS player to load `https://YOUR_BUCKET_NAME.your-s3.com/ezlive/stream.m3u8` to watch the stream.
 
@@ -122,7 +122,5 @@ For windows users, there is a windows build using MSYS2. See [release](https://g
 To start using, unzip the windows tarball, create a `config` file in the same directory as `ezlive.exe`, and run `ezlive.exe`.
 
 # Credits
-
-The built-in RTMP server is modified from [pine](https://github.com/deboot/pine).
 
 Thank [@uonr](https://github.com/uonr) for making nix flake.

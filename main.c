@@ -58,6 +58,25 @@ void on_rtmp_audio(void *ctx, int64_t timestamp, char *buf, size_t size) {
     RingBuffer_write_word32be(rb, size + 11);
 }
 
+void on_srt_start(void *ctx) {
+    MainCtx *main_ctx = ctx;
+    main_ctx->ringbuf = malloc(sizeof(RingBuffer));
+    RingBuffer_init(main_ctx->ringbuf, 4096);
+    RingBuffer *rb = main_ctx->ringbuf;
+    TranscodeTalker_new_stream(&main_ctx->transcode_talker, rb);
+}
+
+void on_srt_stop(void *ctx) {
+    MainCtx *main_ctx = ctx;
+    RingBuffer_end(main_ctx->ringbuf);
+}
+
+void on_srt_data(void *ctx, char *buf, size_t size) {
+    MainCtx *main_ctx = ctx;
+    RingBuffer *rb = main_ctx->ringbuf;
+    RingBuffer_write(rb, (const uint8_t*)buf, size);
+}
+
 int main(int argc, char **argv) {
     ezlive_config = malloc(sizeof(EZLiveConfig));
     EZLiveConfig_init(ezlive_config);
@@ -76,11 +95,10 @@ int main(int argc, char **argv) {
     }
     srand((unsigned) time(NULL));
     MainCtx main_ctx;
-    RtmpCallbacks rtmp_cbs = {
-        .on_audio = &on_rtmp_audio,
-        .on_video = &on_rtmp_video,
-        .on_start = &on_rtmp_start,
-        .on_stop = &on_rtmp_stop,
+    SrtCallbacks srt_cbs = {
+        .on_data = &on_srt_data,
+        .on_stop = &on_srt_stop,
+        .on_start = &on_srt_start,
     };
 
     TranscodeTalker_init(&main_ctx.transcode_talker);
@@ -92,6 +110,7 @@ int main(int argc, char **argv) {
     pthread_t s3worker_thread;
     pthread_create(&s3worker_thread, NULL, &s3_worker_main, NULL);
 
-    start_rtmpserver(rtmp_cbs, &main_ctx);
+    // start_rtmpserver(rtmp_cbs, &main_ctx);
+    start_srt_server(srt_cbs, &main_ctx);
     return 0;
 }

@@ -8,3 +8,5 @@ config
 rootfs
 conf
 *.tar.gz
+podman-start.sh
+config.back

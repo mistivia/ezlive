@@ -177,8 +177,8 @@ void* TranscodeTalker_main (void *vself) {
     while (wait_for_new_stream(self)) {
         AVFormatContext *in_fmt_ctx = avformat_alloc_context();
         in_fmt_ctx->pb = create_avio_from_ringbuffer(self->stream, 4096);
-        const AVInputFormat *flv_fmt = av_find_input_format("flv");
-        if (avformat_open_input(&in_fmt_ctx, NULL, flv_fmt, NULL) < 0) {
+        const AVInputFormat *input_fmt = av_find_input_format("mpegts");
+        if (avformat_open_input(&in_fmt_ctx, NULL, input_fmt, NULL) < 0) {
             fprintf(stderr, "Could not open input file\n");
             continue;
         }

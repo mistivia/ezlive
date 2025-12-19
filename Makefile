@@ -2,7 +2,7 @@ CC := gcc
 CXX := g++
 CFLAGS := -g -Wall
 CXXFLAGS := -g -Wall -std=c++14
-LDFLAGS := -g \
+LDFLAGS := -g -lsrt \
 	-lavformat -lavutil -lavcodec \
 	-laws-cpp-sdk-core -laws-cpp-sdk-s3
 
