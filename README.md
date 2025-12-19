@@ -116,12 +116,6 @@ Start docker container:
         -p 127.0.0.1:61935:61935/udp \
         localhost/ezlive
 
-# Windows
-
-For windows users, there is a windows build using MSYS2. See [release](https://github.com/mistivia/ezlive/releases).
-
-To start using, unzip the windows tarball, create a `config` file in the same directory as `ezlive.exe`, and run `ezlive.exe`.
-
 # Credits
 
 Thank [@uonr](https://github.com/uonr) for making nix flake.
