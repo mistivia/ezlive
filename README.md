@@ -34,7 +34,39 @@ region=auto
 key=your_live_key
 ```
 
-In the dashboard of your object storage provider, add the domain name of your web HLS player to CORS setting. If you don't know how to setup a web HLS player, just add `https://mistivia.github.io`.
+In the dashboard of your object storage provider, enable public read, and add the domain name of your web HLS player to CORS setting. If you don't know how to setup a web HLS player, just add `https://mistivia.github.io`.
+
+For AWS S3, Edit bucket setting, set "Permissions" -> "Bucket Policy" to:
+
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "PublicReadOnly",
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": "s3:GetObject",
+                "Resource": "arn:aws:s3:::nebulive/*"
+            }
+        ]
+    }
+
+Then set "Permissions" -> "Cross-origin resource sharing (CORS)" to:
+
+    [
+        {
+            "AllowedHeaders": [
+                "*"
+            ],
+            "AllowedMethods": [
+                "GET"
+            ],
+            "AllowedOrigins": [
+                "https://your.hls.player.com"
+            ],
+            "ExposeHeaders": []
+        }
+    ]
 
 Start EZLive:
 
