@@ -80,10 +80,23 @@ void on_srt_data(void *ctx, char *buf, size_t size) {
 int main(int argc, char **argv) {
     ezlive_config = malloc(sizeof(EZLiveConfig));
     EZLiveConfig_init(ezlive_config);
+    bool succ;
     if (argc == 1) {
-        EZLiveConfig_load(ezlive_config, "./config");
+        succ = EZLiveConfig_load(ezlive_config, "./config");
+#if defined(_WIN32)
+        if (!succ) {
+            succ = EZLiveConfig_load(ezlive_config, "./config.txt");
+        }
+#endif
+        if (!succ) {
+            fprintf(stderr, "Failed to load config.\n");
+            return -1;
+        }
     } else if (argc == 2) {
-        EZLiveConfig_load(ezlive_config, argv[1]);
+        if (!EZLiveConfig_load(ezlive_config, argv[1])) {
+            fprintf(stderr, "Failed to load config.\n");
+            return -1;
+        }
     } else {
         fprintf(stderr, "wrong args.\n");
         exit(-1);

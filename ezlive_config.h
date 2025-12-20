@@ -16,7 +16,7 @@ typedef struct {
 extern EZLiveConfig *ezlive_config;
 
 void EZLiveConfig_init(EZLiveConfig *self);
-void EZLiveConfig_load(EZLiveConfig *self, const char *filename);
+bool EZLiveConfig_load(EZLiveConfig *self, const char *filename);
 int EZLiveConfig_validate(EZLiveConfig *self);
 
 #endif

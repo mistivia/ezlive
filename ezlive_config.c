@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 EZLiveConfig *ezlive_config;
 
@@ -37,13 +38,13 @@ static void set_field(const char **field, const char *value) {
     *field = strdup(value);
 }
 
-void EZLiveConfig_load(EZLiveConfig *self, const char *filename) {
-    if (!self || !filename) return;
+bool EZLiveConfig_load(EZLiveConfig *self, const char *filename) {
+    if (!self || !filename) return false;
 
     FILE *fp = fopen(filename, "r");
     if (!fp) {
         perror("fopen");
-        return;
+        return false;
     }
 
     char line[1024];
@@ -84,6 +85,7 @@ void EZLiveConfig_load(EZLiveConfig *self, const char *filename) {
     }
 
     fclose(fp);
+    return true;
 }
 
 int EZLiveConfig_validate(EZLiveConfig *self) {
