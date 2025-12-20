@@ -43,7 +43,6 @@ bool EZLiveConfig_load(EZLiveConfig *self, const char *filename) {
 
     FILE *fp = fopen(filename, "r");
     if (!fp) {
-        perror("fopen");
         return false;
     }
 

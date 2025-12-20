@@ -77,7 +77,16 @@ void on_srt_data(void *ctx, char *buf, size_t size) {
     RingBuffer_write(rb, (const uint8_t*)buf, size);
 }
 
+void cleantmpfile() {
+#ifdef _WIN32
+    system("del tmp*");
+#else
+    system("rm /tmp/ezlive*");
+#endif
+}
+
 int main(int argc, char **argv) {
+    cleantmpfile();
     ezlive_config = malloc(sizeof(EZLiveConfig));
     EZLiveConfig_init(ezlive_config);
     bool succ;
