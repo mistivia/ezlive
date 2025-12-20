@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include "ezlive_config.h"
-#include "rtmpserver.h"
+#include "srtserver.h"
 #include "ringbuf.h"
 #include "transcode_talker.h"
 #include "s3_worker.h"
