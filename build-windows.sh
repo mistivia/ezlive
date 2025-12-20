@@ -1,6 +1,8 @@
 #!/bin/bash
 
+rm ezlive-windows-build.zip
 rm -rf ezlive-windows-build
+make clean
 make
 if [ $? -ne 0 ]; then exit $? ; fi
 mkdir ezlive-windows-build
