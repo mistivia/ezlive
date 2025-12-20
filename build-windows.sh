@@ -1,9 +1,10 @@
 #!/bin/bash
 
-rm -rf winpack
+rm -rf ezlive-windows-build
 make
 if [ $? -ne 0 ]; then exit $? ; fi
-mkdir winpack
-cp $(ldd ezlive | grep -v '/c/Windows' | awk '{ print $3 }') winpack/
-cp ezlive winpack/
-cp config.example.txt winpack/
+mkdir ezlive-windows-build
+cp $(ldd ezlive | grep -v '/c/Windows' | awk '{ print $3 }') ezlive-windows-build/
+cp ezlive ezlive-windows-build/
+cp config.example.txt ezlive-windows-build/
+zip ezlive-windows-build.zip ezlive-windows-build
