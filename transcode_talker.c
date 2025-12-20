@@ -11,6 +11,12 @@
 #include <time.h>
 #include <unistd.h>
 
+#if defined(_WIN32)
+    #define TMP_PREFIX "./tmp"
+#else
+    #define TMP_PREFIX "/tmp/ezlive"
+#endif
+
 void HlsList_init(HlsList *lst) {
     lst->len = 0;
 }
@@ -124,7 +130,7 @@ static void finalize_output_file(AVFormatContext *out_fmt_ctx) {
 static void update_m3u8(HlsList *lst, int last_seg) {
     int first_seg = last_seg - lst->len + 1;
     char out_filename[256];
-    tmp_local_filename("/tmp/ezlive", out_filename);
+    tmp_local_filename(TMP_PREFIX, out_filename);
     FILE *fp = fopen(out_filename, "w");
     if (fp == NULL) {
         fprintf(stderr, "failed to open %s for output.\n", out_filename);
@@ -209,7 +215,7 @@ void* TranscodeTalker_main (void *vself) {
         int64_t segment_start_pts = 0;
 
         char out_filename[256];
-        tmp_local_filename("/tmp/ezlive", out_filename);
+        tmp_local_filename(TMP_PREFIX, out_filename);
 
         int64_t pts_time;
         AVPacket pkt;
@@ -249,7 +255,7 @@ void* TranscodeTalker_main (void *vself) {
                     
                     // open new ts
                     segment_start_pts = pts_time;
-                    tmp_local_filename("/tmp/ezlive", out_filename);
+                    tmp_local_filename(TMP_PREFIX, out_filename);
                     output_stream = start_new_output_file(in_fmt_ctx, &out_fmt_ctx, out_filename, audio_stream_index, video_stream_index);
                     if (pkt.stream_index == video_stream_index)
                         out_stream = output_stream.video_stream;
