@@ -24,6 +24,7 @@
 
           buildInputs = with pkgs; [
             ffmpeg
+            srt
             aws-sdk-cpp
           ];
 
@@ -55,6 +56,7 @@
             pkg-config
             ffmpeg
             aws-sdk-cpp
+            srt
           ];
 
           shellHook = ''
