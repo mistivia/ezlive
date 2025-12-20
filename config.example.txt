@@ -1,0 +1,9 @@
+listening_addr=127.0.0.1
+listening_port=61935
+bucket=your_bucket
+endpoint=s3.REGION.YOUR-S3.com
+s3_path=ezlive/
+access_key=xxxxxxxxxxxxxxxxx
+secret_key=xxxxxxxxxxxxxxxxx
+region=REGION
+key=YOUR_KEY
