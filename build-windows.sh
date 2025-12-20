@@ -9,4 +9,4 @@ mkdir ezlive-windows-build
 cp $(ldd ezlive | grep -v '/c/Windows' | awk '{ print $3 }') ezlive-windows-build/
 cp ezlive ezlive-windows-build/
 cp config.example.txt ezlive-windows-build/
-zip ezlive-windows-build.zip ezlive-windows-build
+zip ezlive-windows-build.zip $(find ezlive-windows-build -name '*')
