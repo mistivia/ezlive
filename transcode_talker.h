@@ -3,7 +3,6 @@
 
 #include "ringbuf.h"
 #include "pthread.h"
-#include <bits/pthreadtypes.h>
 
 typedef struct {
     char *files[15];

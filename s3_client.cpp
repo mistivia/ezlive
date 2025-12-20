@@ -29,8 +29,10 @@ void S3Client_init() {
     Aws::Auth::AWSCredentials credentials;
     config.endpointOverride = ezlive_config->endpoint;
     config.region = ezlive_config->region;
+#if !defined(_WIN32)
     config.checksumConfig.requestChecksumCalculation = Aws::Client::RequestChecksumCalculation::WHEN_REQUIRED;
     config.checksumConfig.responseChecksumValidation = Aws::Client::ResponseChecksumValidation::WHEN_REQUIRED;
+#endif
     credentials = Aws::Auth::AWSCredentials(ezlive_config->access_key, ezlive_config->secret_key);
     s3client = new Aws::S3::S3Client(credentials, nullptr, config);
 }

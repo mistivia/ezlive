@@ -6,14 +6,17 @@
 #include <assert.h>
 #include <stdarg.h>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/poll.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
-#include <time.h>
+#if defined(_WIN32)
+    #include <winsock2.h>
+#else
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <sys/poll.h>
+    #include <sys/time.h>
+    #include <unistd.h>
+    #include <fcntl.h>
+    #include <arpa/inet.h>
+#endif
 
 #include <srt/srt.h>
 
