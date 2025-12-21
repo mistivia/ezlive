@@ -47,7 +47,7 @@ For AWS S3, Edit bucket setting, set "Permissions" -> "Bucket Policy" to:
                 "Effect": "Allow",
                 "Principal": "*",
                 "Action": "s3:GetObject",
-                "Resource": "arn:aws:s3:::nebulive/*"
+                "Resource": "arn:aws:s3:::YOUR_BUCKET/*"
             }
         ]
     }
