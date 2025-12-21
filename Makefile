@@ -1,6 +1,6 @@
 CC := gcc
 CXX := g++
-CFLAGS := -g -Wall
+CFLAGS := -g -Wall -std=gnu99
 CXXFLAGS := -g -Wall -std=c++14
 UNAME := $(shell uname -s)
 LDFLAGS := -g -lsrt \
