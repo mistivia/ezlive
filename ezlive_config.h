@@ -1,6 +1,8 @@
 #ifndef EZLIVE_CONFIG_H_
 #define EZLIVE_CONFIG_H_
 
+#include <stdbool.h>
+
 typedef struct {
     const char *listening_addr;
     int listening_port;
