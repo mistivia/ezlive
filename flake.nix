@@ -51,7 +51,7 @@
 
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            gcc
+            gcc15
             gnumake
             pkg-config
             ffmpeg
