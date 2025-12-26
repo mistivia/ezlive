@@ -1,5 +1,7 @@
 # EZLive: Self-hosted Serverless Livestream
 
+[中文说明](./README_zh.md)
+
 EZLive is a minimal self-hosted livestream solution built on top of S3-compatible object storage.
 
 
