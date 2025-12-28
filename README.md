@@ -80,9 +80,6 @@ Then set "Permissions" -> "Cross-origin resource sharing (CORS)" to:
     ]
 
 Start EZLive:
-
-启动 EZLive：
-
 ```
 ./ezlive
 ```
