@@ -1,5 +1,7 @@
 # EZLive: 自托管 Serverless 直播方案
 
+[视频教程（YouTube）](https://www.youtube.com/watch?v=hx2nXgzisx4)
+
 EZLive 是一个构建在 S3 兼容对象存储之上的极简自托管直播解决方案。
 
 它运行一个本地 SRT 服务器，接收实时视频流，将其转换为 HLS 切片（.m3u8 + .ts），并通过任何兼容 S3 的对象存储作为静态文件对外发布。EZLive不需要专用的流媒体服务器，一切都在 Serverless（无服务器）架构下运行。随后，你可以轻松设置一个 HTML5 HLS 播放器来观看直播。
