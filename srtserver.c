@@ -51,16 +51,16 @@ int handshake_callback(void* opaq, SRTSOCKET ns, int hs_version, const struct so
 }
 
 void setsock(SRTSOCKET *sock) {
-    int recv_latency = 800;
+    int recv_latency = 8000;
     srt_setsockopt(*sock, 0, SRTO_RCVLATENCY, &recv_latency, sizeof recv_latency);
     
-    int peer_latency = 800;
+    int peer_latency = 8000;
     srt_setsockopt(*sock, 0, SRTO_PEERLATENCY, &peer_latency, sizeof peer_latency);
     
     int snd_buf = 60000;
     srt_setsockopt(*sock, 0, SRTO_SNDBUF, &snd_buf, sizeof snd_buf);
 
-    int latency = 800;
+    int latency = 8000;
     srt_setsockopt(*sock, 0, SRTO_LATENCY, &latency, sizeof(latency));
 }
 
