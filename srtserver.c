@@ -50,6 +50,20 @@ int handshake_callback(void* opaq, SRTSOCKET ns, int hs_version, const struct so
     return 0;
 }
 
+void setsock(SRTSOCKET *sock) {
+    int recv_latency = 800;
+    srt_setsockopt(*sock, 0, SRTO_RCVLATENCY, &recv_latency, sizeof recv_latency);
+    
+    int peer_latency = 800;
+    srt_setsockopt(*sock, 0, SRTO_PEERLATENCY, &peer_latency, sizeof peer_latency);
+    
+    int snd_buf = 60000;
+    srt_setsockopt(*sock, 0, SRTO_SNDBUF, &snd_buf, sizeof snd_buf);
+
+    int latency = 800;
+    srt_setsockopt(*sock, 0, SRTO_LATENCY, &latency, sizeof(latency));
+}
+
 void start_srt_server(SrtCallbacks srtcb, void *ctx) {
     if (srt_startup() != 0) {
         fprintf(stderr, "SRT startup failed.\n");
@@ -64,6 +78,7 @@ void start_srt_server(SrtCallbacks srtcb, void *ctx) {
 
     int yes = 1;
     srt_setsockopt(bind_sock, 0, SRTO_RCVSYN, &yes, sizeof(yes));
+    setsock(&bind_sock);
 
     struct sockaddr_in sa;
     memset(&sa, 0, sizeof(sa));
@@ -98,6 +113,7 @@ void start_srt_server(SrtCallbacks srtcb, void *ctx) {
             fprintf(stderr, "Accept error: %s\n", srt_getlasterror_str());
             continue;
         }
+        setsock(&client_sock);
 
         printf("Client connected! Starting to receive data.\n");
 		srtcb.on_start(ctx);
