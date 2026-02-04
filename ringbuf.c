@@ -28,7 +28,7 @@ void RingBuffer_destroy(RingBuffer *self) {
 }
 
 size_t RingBuffer_size(RingBuffer *self) {
-    size_t size;
+    size_t size = 0;
     if (self->full_flag) {
         size = self->max;
     } else if (self->head >= self->tail) {
@@ -112,7 +112,7 @@ end:
 }
 
 bool RingBuffer_write_word16le(RingBuffer* self, uint16_t x) {
-    uint8_t buf[2];
+    uint8_t buf[2] = {0};
     buf[0] = x & 0xff;
     buf[1] = (x >> 8) & 0xff;
     int r = RingBuffer_write(self, buf, 2);
@@ -121,7 +121,7 @@ bool RingBuffer_write_word16le(RingBuffer* self, uint16_t x) {
 }
 
 bool RingBuffer_write_word32le(RingBuffer* self, uint32_t x) {
-    uint8_t buf[4];
+    uint8_t buf[4] = {0};
     buf[0] = x & 0xff;
     buf[1] = (x >> 8) & 0xff;
     buf[2] = (x >> 16) & 0xff;
@@ -132,7 +132,7 @@ bool RingBuffer_write_word32le(RingBuffer* self, uint32_t x) {
 }
 
 bool RingBuffer_write_word16be(RingBuffer* self, uint16_t x) {
-    uint8_t buf[2];
+    uint8_t buf[2] = {0};
     buf[1] = x & 0xff;
     buf[0] = (x >> 8) & 0xff;
     int r = RingBuffer_write(self, buf, 2);
@@ -141,7 +141,7 @@ bool RingBuffer_write_word16be(RingBuffer* self, uint16_t x) {
 }
 
 bool RingBuffer_write_word32be(RingBuffer* self, uint32_t x) {
-    uint8_t buf[4];
+    uint8_t buf[4] = {0};
     buf[3] = x & 0xff;
     buf[2] = (x >> 8) & 0xff;
     buf[1] = (x >> 16) & 0xff;
@@ -152,7 +152,7 @@ bool RingBuffer_write_word32be(RingBuffer* self, uint32_t x) {
 }
 
 bool RingBuffer_write_word24le(RingBuffer* self, uint32_t x) {
-    uint8_t buf[3];
+    uint8_t buf[3] = {0};
     buf[0] = x & 0xff;
     buf[1] = (x >> 8) & 0xff;
     buf[2] = (x >> 16) & 0xff;
@@ -162,7 +162,7 @@ bool RingBuffer_write_word24le(RingBuffer* self, uint32_t x) {
 }
 
 bool RingBuffer_write_word24be(RingBuffer* self, uint32_t x) {
-    uint8_t buf[3];
+    uint8_t buf[3] = {0};
     buf[2] = x & 0xff;
     buf[1] = (x >> 8) & 0xff;
     buf[0] = (x >> 16) & 0xff;
@@ -172,7 +172,7 @@ bool RingBuffer_write_word24be(RingBuffer* self, uint32_t x) {
 }
 
 bool RingBuffer_write_char(RingBuffer* self, uint8_t x) {
-    uint8_t buf[1];
+    uint8_t buf[1] = {0};
     buf[0] = x;
     int r = RingBuffer_write(self, buf, 1);
     return r == 1;

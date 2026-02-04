@@ -129,7 +129,7 @@ static void finalize_output_file(AVFormatContext *out_fmt_ctx) {
 
 static void update_m3u8(HlsList *lst, int last_seg) {
     int first_seg = last_seg - lst->len + 1;
-    char out_filename[256];
+    char out_filename[256] = {0};
     tmp_local_filename(TMP_PREFIX, out_filename);
     FILE *fp = fopen(out_filename, "w");
     if (fp == NULL) {
@@ -172,12 +172,12 @@ static void* check_timer(void *vself) {
 }
 
 void* TranscodeTalker_main (void *vself) {
-    char remote_prefix[9];
-    char remote_filename[256];
+    char remote_prefix[9] = {0};
+    char remote_filename[256] = {0};
     TranscodeTalker *self = vself;
     int segment_index = 0;
     tmp_ts_prefix(remote_prefix);
-    pthread_t check_thread;
+    pthread_t check_thread = {0};
     pthread_create(&check_thread, NULL, check_timer, self);
     pthread_mutex_lock(&self->lock);
     while (wait_for_new_stream(self)) {
@@ -214,11 +214,11 @@ void* TranscodeTalker_main (void *vself) {
         AVFormatContext *out_fmt_ctx = NULL;
         int64_t segment_start_pts = 0;
 
-        char out_filename[256];
+        char out_filename[256] = {0};
         tmp_local_filename(TMP_PREFIX, out_filename);
 
-        int64_t pts_time;
-        AVPacket pkt;
+        int64_t pts_time = {0};
+        AVPacket pkt = {0};
         StreamPair output_stream = start_new_output_file(
             in_fmt_ctx, &out_fmt_ctx, out_filename, audio_stream_index, video_stream_index);
         while (av_read_frame(in_fmt_ctx, &pkt) >= 0) {
@@ -240,7 +240,7 @@ void* TranscodeTalker_main (void *vself) {
                 if (pkt.stream_index == video_stream_index && (pkt.flags & AV_PKT_FLAG_KEY)) {
                     // close current ts
                     printf("new ts: %ld\n", pts_time - segment_start_pts);
-                    time_t now;
+                    time_t now = {0};
                     time(&now);
                     self->last_updated = now;
                     finalize_output_file(out_fmt_ctx);
@@ -279,7 +279,7 @@ void* TranscodeTalker_main (void *vself) {
         printf("new ts: %ld\n", pts_time - segment_start_pts);
 
         finalize_output_file(out_fmt_ctx);
-        time_t now;
+        time_t now = {0};
         time(&now);
         self->last_updated = now;
         ts_filename(remote_prefix, segment_index, remote_filename);

@@ -22,7 +22,7 @@ void tmp_local_filename(const char *prefix, char *buf) {
 }
 
 void tmp_ts_prefix(char *buf) {
-    size_t i;
+    size_t i = {0};
     for (i = 0; i < 4; i++) {
         unsigned char r = rand() & 0xFF;
         buf[i * 2] = hextable[r >> 4];

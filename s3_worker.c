@@ -11,7 +11,7 @@
 TaskQueue task_queue;
 
 void exec_s3_task(void *vtask) {
-    char obj_name_buf[256];
+    char obj_name_buf[256] = {0};
     S3Task *task = vtask;
     if (task->task_type == kUploadTask) {
         snprintf(obj_name_buf, 255, "%s%s", ezlive_config->s3_path, task->remote_name);
@@ -45,7 +45,7 @@ void s3_worker_push(S3Task task) {
 
 void* s3_worker_main(void *ctx) {
     while (1) {
-        TaskFn task_fn;
+        TaskFn task_fn = {0};
         void *arg;
         TaskQueue_pop(&task_queue, &task_fn, &arg);
         (*task_fn)(arg);

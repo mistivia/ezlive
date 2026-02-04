@@ -25,7 +25,7 @@
 #define BUFFER_SIZE 1500
 
 int handshake_callback(void* opaq, SRTSOCKET ns, int hs_version, const struct sockaddr* peeraddr, const char* streamid) {
-    char addr_str[INET_ADDRSTRLEN];
+    char addr_str[INET_ADDRSTRLEN] = {0};
     struct sockaddr_in* sin = (struct sockaddr_in*)peeraddr;
     inet_ntop(AF_INET, &(sin->sin_addr), addr_str, INET_ADDRSTRLEN);
 
@@ -80,8 +80,7 @@ void start_srt_server(SrtCallbacks srtcb, void *ctx) {
     srt_setsockopt(bind_sock, 0, SRTO_RCVSYN, &yes, sizeof(yes));
     setsock(&bind_sock);
 
-    struct sockaddr_in sa;
-    memset(&sa, 0, sizeof(sa));
+    struct sockaddr_in sa = {0};
     sa.sin_family = AF_INET;
     sa.sin_port = htons(ezlive_config->listening_port);
 	if (inet_pton(AF_INET, ezlive_config->listening_addr, &sa.sin_addr.s_addr) <= 0) {
@@ -103,7 +102,7 @@ void start_srt_server(SrtCallbacks srtcb, void *ctx) {
     }
 
     while (1) {
-        struct sockaddr_storage client_sa;
+        struct sockaddr_storage client_sa = {0};
         int sa_len = sizeof(client_sa);
 
         printf("Waiting for client to connect...\n");

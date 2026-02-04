@@ -9,7 +9,7 @@
 EZLiveConfig *ezlive_config;
 
 static char *trim(char *s) {
-    char *end;
+    char *end = {0};
     while (isspace((unsigned char)*s)) s++;
     if (*s == 0) return s;
     end = s + strlen(s) - 1;

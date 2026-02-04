@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
     cleantmpfile();
     ezlive_config = malloc(sizeof(EZLiveConfig));
     EZLiveConfig_init(ezlive_config);
-    bool succ;
+    bool succ = {0};
     if (argc == 1) {
         succ = EZLiveConfig_load(ezlive_config, "./config");
 #if defined(_WIN32)
@@ -66,13 +66,13 @@ int main(int argc, char **argv) {
         fprintf(stderr, "wrong args.\n");
         exit(-1);
     }
-    int ret;
+    int ret = {0};
     if ((ret = EZLiveConfig_validate(ezlive_config)) < 0) {
         fprintf(stderr, "ezlive config error: %d.\n", ret);
         exit(-1);
     }
     srand((unsigned) time(NULL));
-    MainCtx main_ctx;
+    MainCtx main_ctx = {0};
     SrtCallbacks srt_cbs = {
         .on_data = &on_srt_data,
         .on_stop = &on_srt_stop,
