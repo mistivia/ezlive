@@ -90,41 +90,6 @@ Then use a HLS player to load `https://YOUR_BUCKET_NAME.your-s3.com/ezlive/strea
 
 If you don't know how to setup a HLS player, then make sure you have added `https://mistivia.github.io` in your object storage's CORS setting, then open `https://mistivia.github.io/ezlive#https://YOUR_BUCKET_NAME.your-s3.com/ezlive/stream.m3u8`.
 
-# WARNING
-
-The Docker build was done on my laptop. While I promise I have no malicious intent, this does not guarantee that my build environment is secure, so is the build target. If you truly care about your privacy and security, please make sure to build from source yourself.
-
-# Docker Usage
-
-Download the docker image tarball in [release](https://github.com/mistivia/ezlive/releases).
-
-Load the docker image:
-
-    cat ezlive-docker-image.tar.gz | gzip -d | sudo docker load
-
-Create a directory `conf`:
-
-    mkdir conf
-
-Create a config file `conf/config`, the config file is nearly the same as the config above. But for docker, the `listening_addr` should be `0.0.0.0`:
-
-    listening_addr=0.0.0.0
-    listening_port=61935
-    bucket=YOUR_BUCKET_NAME
-    endpoint=https://your-s3.com
-    s3_path=ezlive/
-    access_key=YOUR_S3_ACCESS_KEY
-    secret_key=YOUR_S3_SECRET_KEY
-    region=auto
-    key=your_live_key
-
-Start docker container:
-
-    sudo docker run -it --rm \
-        -v ./conf:/etc/ezlive/ \
-        -p 127.0.0.1:61935:61935/udp \
-        localhost/ezlive
-
 # Credits
 
 Thank [@uonr](https://github.com/uonr) for making nix flake.
