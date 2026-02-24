@@ -13,3 +13,8 @@ config.back
 nohup.out
 ezlive.err.log
 ezlive.log
+gemini.err
+TASK.md
+TMP.md
+srt/
+target/
