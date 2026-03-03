@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <fstream>
+#include <unistd.h>
 
 // Helper function to create temporary config file
 static std::string create_temp_file(const char* content)

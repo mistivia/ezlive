@@ -18,7 +18,9 @@ public:
     std::string key;
 
     explicit config();
+    
     int load(const char *filename);
+
 private:
     int validate();
 };

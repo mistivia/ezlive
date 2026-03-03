@@ -5,13 +5,15 @@
 
 namespace ezlive {
 
-void ring_buffer::stop() {
+void ring_buffer::stop()
+{
     std::unique_lock<std::mutex> lk{m_lock};
     m_finished_flag = true;
     m_not_empty.notify_all();
 }
 
-size_t ring_buffer::write(const uint8_t *data, size_t len) {
+size_t ring_buffer::write(const uint8_t *data, size_t len)
+{
     size_t written = 0;
     std::unique_lock<std::mutex> lk{m_lock};
     while (written < len) {
@@ -36,7 +38,8 @@ size_t ring_buffer::write(const uint8_t *data, size_t len) {
     return written;
 }
 
-size_t ring_buffer::read(uint8_t *data, size_t len) {
+size_t ring_buffer::read(uint8_t *data, size_t len)
+{
     std::unique_lock<std::mutex> lk{m_lock};
 
     // Wait for data to be available (unless buffer is already finished)

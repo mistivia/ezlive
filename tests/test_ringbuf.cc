@@ -3,7 +3,7 @@
 #include <cassert>
 #include <cstring>
 #include <thread>
-#include <chrono>
+#include <cstdio>
 
 static void test_constructor()
 {

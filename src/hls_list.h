@@ -17,18 +17,21 @@ public:
     void clear();
     void update_m3u8(int last_seg);
 
-    int len() const {
+    int len() const
+    {
         return m_len;
     }
 
-    const char* file(int index) const {
+    const char* file(int index) const
+    {
         if (index < 0 || index >= m_len) {
             return "";
         }
         return m_lst_files[index].c_str();
     }
 
-    double time(int index) const {
+    double time(int index) const
+    {
         if (index < 0 || index >= m_len) {
             return 0.0;
         }

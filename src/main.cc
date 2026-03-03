@@ -13,10 +13,12 @@ namespace ezlive {
 
 class main_ctx : public srt_callback {
 public:
-    void start_transmuxer() {
+    void start_transmuxer()
+    {
         m_transmuxer.start();
     }
-    void stop_transmuxer() {
+    void stop_transmuxer()
+    {
         m_transmuxer.stop();
     }
 
@@ -86,7 +88,7 @@ int main(int argc, char **argv)
     s3_worker_push(s3_clear_task());
 
     std::thread s3worker_thread{[]() {
-        s3_worker_main(NULL);
+        s3_worker_run(NULL);
     }};
     ctx.start_transmuxer();
     start_srt_server(static_cast<srt_callback*>(&ctx));

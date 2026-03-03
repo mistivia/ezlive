@@ -12,7 +12,7 @@ namespace ezlive {
 
 task_queue tq{128};
 
-void exec_s3_task(void *vtask)
+static void exec_s3_task(void *vtask)
 {
     char obj_name_buf[256] = {0};
     s3_task *task = static_cast<s3_task*>(vtask);
@@ -37,7 +37,7 @@ void s3_worker_push(s3_task &&task)
     tq.push(exec_s3_task, ptask);
 }
 
-void* s3_worker_main(void *ctx)
+void* s3_worker_run(void *ctx)
 {
     while (1) {
         task_queue::task_fn fn;

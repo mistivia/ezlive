@@ -12,7 +12,8 @@ namespace ezlive {
 
 const int BUFFER_SIZE = 1500;
 
-int handshake_callback(void* opaq, SRTSOCKET ns, int hs_version, const struct sockaddr* peeraddr, const char* streamid) {
+int handshake_callback(void* opaq, SRTSOCKET ns, int hs_version, const struct sockaddr* peeraddr, const char* streamid)
+{
     char addr_str[INET_ADDRSTRLEN] = {0};
     struct sockaddr_in* sin = (struct sockaddr_in*)peeraddr;
     inet_ntop(AF_INET, &(sin->sin_addr), addr_str, INET_ADDRSTRLEN);
@@ -38,7 +39,8 @@ int handshake_callback(void* opaq, SRTSOCKET ns, int hs_version, const struct so
     return 0;
 }
 
-void setsock(SRTSOCKET *sock) {
+void setsock(SRTSOCKET *sock)
+{
     int recv_latency = 8000;
     srt_setsockopt(*sock, 0, SRTO_RCVLATENCY, &recv_latency, sizeof recv_latency);
     
@@ -52,7 +54,8 @@ void setsock(SRTSOCKET *sock) {
     srt_setsockopt(*sock, 0, SRTO_LATENCY, &latency, sizeof(latency));
 }
 
-void start_srt_server(srt_callback *callback) {
+void start_srt_server(srt_callback *callback)
+{
     if (srt_startup() != 0) {
         fprintf(stderr, "SRT startup failed.\n");
         return;

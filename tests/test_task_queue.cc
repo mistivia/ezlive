@@ -1,7 +1,7 @@
 #include "../src/task_queue.h"
 
 #include <cassert>
-#include <cstring>
+#include <cstdio>
 #include <thread>
 #include <atomic>
 #include <chrono>

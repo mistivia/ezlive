@@ -1,9 +1,6 @@
 #pragma once
-namespace Aws {
-namespace S3 {
-class S3Client;
-}
-}
+
+namespace Aws { namespace S3 { class S3Client; } }
 
 namespace ezlive {
 
