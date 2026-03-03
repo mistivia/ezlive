@@ -21,3 +21,4 @@ target/
 .bashrc
 .inputrc
 .Xauthority
+build/
