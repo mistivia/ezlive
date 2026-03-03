@@ -94,8 +94,9 @@ int config::load(const char *filename)
     }
 
     fclose(fp);
-    if (validate() != 0) {
-        return -1;
+    int ret = validate();
+    if (ret != 0) {
+        return ret;
     }
     return 0;
 }
