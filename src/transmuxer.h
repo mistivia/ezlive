@@ -2,7 +2,7 @@
 #define TRANSCODE_TALKER_H_
 
 #include "ringbuf.h"
-#include "src/hls_list.h"
+#include "hls_list.h"
 #include "pthread.h"
 
 namespace ezlive {

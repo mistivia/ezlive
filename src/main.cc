@@ -5,7 +5,7 @@
 #include "ezlive_config.h"
 #include "srtserver.h"
 #include "ringbuf.h"
-#include "transcode_talker.h"
+#include "transmuxer.h"
 #include "s3_worker.h"
 
 namespace ezlive {
@@ -41,6 +41,10 @@ void cleantmpfile() {
     system("rm /tmp/ezlive*");
 #endif
 }
+
+} // namespace ezlive
+
+using namespace ezlive;
 
 int main(int argc, char **argv) {
     cleantmpfile();
@@ -87,5 +91,3 @@ int main(int argc, char **argv) {
     start_srt_server(static_cast<srt_callback*>(&ctx));
     return 0;
 }
-
-} // namespace ezlive

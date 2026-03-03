@@ -5,6 +5,8 @@
 
 namespace ezlive {
 
+extern const std::string TMP_PREFIX;
+
 class hls_list
 {
 public:

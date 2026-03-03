@@ -1,10 +1,12 @@
-#include "fsutils.h"
+#include "utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "s3_worker.h"
+
+namespace ezlive {
 
 const char hextable[] = "0123456789abcdef";
 
@@ -42,3 +44,5 @@ void upload_file(const char *local, const char *remote) {
 void remove_remote(const char *remote) {
     s3_worker_push(s3_delete_task(remote));
 }
+
+} // namespace ezlive
