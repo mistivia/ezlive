@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := -g -Wall -fno-exceptions -std=gnu++17
+CXXFLAGS := -g -Wall -fno-exceptions -std=gnu++17 -MMD -MP
 UNAME := $(shell uname -s)
 LDFLAGS := -g -lsrt \
 	-lavformat -lavutil -lavcodec \
@@ -12,15 +12,16 @@ endif
 CXX_SOURCES := $(shell find src -name '*.cc')
 
 CXX_OBJS := $(CXX_SOURCES:src/%.cc=build/%.o)
+CXX_DEPS := $(CXX_SOURCES:src/%.cc=build/%.d)
 
 TEST_SOURCES := $(wildcard tests/test_*.cc)
 TEST_BINARIES := $(TEST_SOURCES:tests/%.cc=build/%)
 
 TARGET := ezlive
 
-all: $(TARGET)
+all: build $(TARGET)
 
-test: $(TEST_BINARIES) $(CXX_OBJS)
+test: build $(TEST_BINARIES) $(CXX_OBJS)
 	@for test in $(TEST_BINARIES); do echo "Running $$test..."; ./$$test || exit 1; done
 
 docker: ezlive-docker-image.tar.gz
@@ -34,7 +35,7 @@ $(TARGET): build $(C_OBJS) $(CXX_OBJS)
 build:
 	mkdir -p build
 
-build/%.o: src/%.cc | build
+build/%.o: src/%.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 bear:
@@ -47,5 +48,7 @@ build/test_%: tests/test_%.cc $(TEST_OBJS) build
 
 clean:
 	rm -rf build $(TARGET) $(TEST_BINARIES)
+
+-include $(CXX_DEPS)
 
 .PHONY: all clean test build bear

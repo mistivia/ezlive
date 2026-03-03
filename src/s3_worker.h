@@ -24,6 +24,6 @@ void exec_s3_task(void *);
 
 void* s3_worker_main(void *);
 
-void s3_worker_push(s3_task task);
+void s3_worker_push(s3_task &&task);
 
 } // namespace ezlive

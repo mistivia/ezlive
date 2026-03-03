@@ -31,9 +31,9 @@ void exec_s3_task(void *vtask)
     free(task);
 }
 
-void s3_worker_push(s3_task task)
+void s3_worker_push(s3_task &&task)
 {
-    s3_task *ptask = new s3_task{task};
+    s3_task *ptask = new s3_task{std::move(task)};
     tq.push(exec_s3_task, ptask);
 }
 
