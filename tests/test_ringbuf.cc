@@ -14,6 +14,7 @@ static void test_constructor()
 
 static void test_write_and_read()
 {
+    printf("test_write_and_read\n");
     ezlive::ring_buffer rb(1024);
     const uint8_t data[] = "hello world";
     size_t len = strlen(reinterpret_cast<const char*>(data)) + 1;
@@ -32,6 +33,7 @@ static void test_write_and_read()
 
 static void test_partial_read()
 {
+    printf("test_partial_read\n");
     ezlive::ring_buffer rb(1024);
     const uint8_t data[] = "hello world";
     size_t len = strlen(reinterpret_cast<const char*>(data)) + 1;
@@ -55,6 +57,7 @@ static void test_partial_read()
 
 static void test_wrap_around()
 {
+    printf("test_wrap_around\n");
     ezlive::ring_buffer rb(16);
     const uint8_t data1[] = "abcdefghijklmn";  // 15 bytes including null
 
@@ -82,16 +85,31 @@ static void test_wrap_around()
 
 static void test_write_larger_than_buffer()
 {
+    printf("test_write_larger_than_buffer\n");
     ezlive::ring_buffer rb(8);
     const uint8_t data[] = "this is a long string";
-
+    
+    // Need a background reader to consume data so write can proceed
+    size_t total_read = 0;
+    std::thread reader([&rb, &total_read]() {
+        uint8_t buffer[8];
+        while (total_read < sizeof(data)) {
+            size_t read = rb.read(buffer, sizeof(buffer));
+            total_read += read;
+        }
+    });
+    
     // Should write all data even if larger than buffer
     size_t written = rb.write(data, sizeof(data));
     assert(written == sizeof(data));
+    
+    reader.join();
+    assert(total_read == sizeof(data));
 }
 
 static void test_multiple_writes_reads()
 {
+    printf("test_multiple_writes_reads\n");
     ezlive::ring_buffer rb(100);
     const uint8_t data1[] = "first";
     const uint8_t data2[] = "second";
@@ -109,6 +127,7 @@ static void test_multiple_writes_reads()
 
 static void test_read_from_empty()
 {
+    printf("test_read_from_empty\n");
     ezlive::ring_buffer rb(64);
 
     // Test that read blocks on empty buffer until stop is called
@@ -119,6 +138,7 @@ static void test_read_from_empty()
 
 static void test_stop()
 {
+    printf("test_stop\n");
     ezlive::ring_buffer rb(64);
     rb.stop();
     // After stop, read should return 0 on empty buffer
@@ -129,6 +149,7 @@ static void test_stop()
 
 static void test_concurrent_write_read()
 {
+    printf("test_concurrent_write_read\n");
     ezlive::ring_buffer rb(1024);
     std::thread writer([&rb]() {
         for (int i = 0; i < 100; i++) {

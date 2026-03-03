@@ -37,8 +37,10 @@ build:
 build/%.o: src/%.cc | build
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Test binaries compilation pattern - standalone tests
-# Exclude main.o from test binaries
+bear:
+	make clean
+	bear -- make all $(TEST_BINARIES)
+
 TEST_OBJS := $(filter-out build/main.o,$(CXX_OBJS))
 build/test_%: tests/test_%.cc $(TEST_OBJS) build
 	$(CXX) $(CXXFLAGS) $< -o $@ $(TEST_OBJS) $(LDFLAGS)
@@ -46,4 +48,4 @@ build/test_%: tests/test_%.cc $(TEST_OBJS) build
 clean:
 	rm -rf build $(TARGET) $(TEST_BINARIES)
 
-.PHONY: all clean test build
+.PHONY: all clean test build bear

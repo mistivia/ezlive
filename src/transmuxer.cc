@@ -1,13 +1,15 @@
 #include "transmuxer.h"
 
-#include <string>
 #include <cstdlib>
+#include <ctime>
+#include <cstdio>
+
+#include <string>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
 #include <chrono>
-#include <ctime>
-#include <cstdio>
+
 #include <unistd.h>
 
 extern "C" {
@@ -16,7 +18,6 @@ extern "C" {
     #include <libavformat/avio.h>
     #include <libavutil/mem.h>
     #include <libavutil/timestamp.h>
-    #include <time.h>
 }
 
 #include "utils.h"
