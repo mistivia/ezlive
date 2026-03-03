@@ -1,12 +1,12 @@
-Unreleased
-Add local file system backend
-increase SRT latency to 800ms
+* unreleased
+refactor to c++
+increase SRT latency to 8000ms
 
 v0.2.1
-Windows support
+windows support
 
 v0.2.0
-Ingest server changed from RTMP to SRT
+ingest server changed from RTMP to SRT
 
 v0.1
-Initial release
+initial release

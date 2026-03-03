@@ -1,11 +1,17 @@
 #include "hls_list.h"
-#include "fsutils.h"
+#include "utils.h"
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
 namespace ezlive {
+
+#if defined(_WIN32)
+    cosnt std::string TMP_PREFIX = "./tmp";
+#else
+    const std::string TMP_PREFIX  = "/tmp/ezlive";
+#endif
 
 hls_list::hls_list()
     : m_len(0)
@@ -49,7 +55,7 @@ void hls_list::update_m3u8(int last_seg)
 {
     int first_seg = last_seg - m_len + 1;
     char out_filename[256] = {0};
-    tmp_local_filename(TMP_PREFIX, out_filename);
+    tmp_local_filename(TMP_PREFIX.c_str(), out_filename);
     FILE *fp = fopen(out_filename, "w");
     if (fp == NULL) {
         fprintf(stderr, "failed to open %s for output.\n", out_filename);

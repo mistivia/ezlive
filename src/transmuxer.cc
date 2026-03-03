@@ -1,23 +1,25 @@
 #include "transmuxer.h"
-#include "fsutils.h"
-#include "ringbuf.h"
 
 #include <string>
+#include <cstdlib>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
-#include <libavformat/avformat.h>
-#include <libavformat/avio.h>
-#include <libavutil/mem.h>
-#include <libavutil/timestamp.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <time.h>
-#include <unistd.h>
+extern "C" {
+    #include <libavutil/mathematics.h>
+    #include <libavformat/avformat.h>
+    #include <libavformat/avio.h>
+    #include <libavutil/mem.h>
+    #include <libavutil/timestamp.h>
+    #include <time.h>
+    #include <unistd.h>
+}
 
-#if defined(_WIN32)
-    #define TMP_PREFIX "./tmp"
-#else
-    #define TMP_PREFIX "/tmp/ezlive"
-#endif
+#include "utils.h"
+#include "ringbuf.h"
+
+namespace ezlive {
 
 static int wait_for_new_stream(TranscodeTalker *self) {
     while (pthread_cond_wait(&self->streaming_cond, &self->lock)) {
@@ -67,7 +69,9 @@ static StreamPair start_new_output_file(
     };
 }
 
-static int ring_buffer_avio_read(void *ctx, uint8_t *buf, int buf_size) {
+static int
+ring_buffer_avio_read(void *ctx, uint8_t *buf, int buf_size)
+{
     ring_buffer *rb = ctx;
     size_t n = ring_buffer_read(rb, buf, buf_size);
     if (n == 0 && buf_size > 0) {
@@ -162,7 +166,7 @@ void* TranscodeTalker_main (void *vself) {
         int64_t segment_start_pts = 0;
 
         char out_filename[256] = {0};
-        tmp_local_filename(TMP_PREFIX, out_filename);
+        tmp_local_filename(TMP_PREFIX.c_str(), out_filename);
 
         int64_t pts_time = {0};
         AVPacket pkt = {0};
@@ -202,7 +206,7 @@ void* TranscodeTalker_main (void *vself) {
                     
                     // open new ts
                     segment_start_pts = pts_time;
-                    tmp_local_filename(TMP_PREFIX, out_filename);
+                    tmp_local_filename(TMP_PREFIX.c_str(), out_filename);
                     output_stream = start_new_output_file(in_fmt_ctx, &out_fmt_ctx, out_filename, audio_stream_index, video_stream_index);
                     if (pkt.stream_index == video_stream_index)
                         out_stream = output_stream.video_stream;
@@ -214,11 +218,18 @@ void* TranscodeTalker_main (void *vself) {
                     }
                 }
             }
-            pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
-            pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+            pkt.pts = av_rescale_q_rnd(
+                pkt.pts, in_stream->time_base, out_stream->time_base, 
+                (enum AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            pkt.dts = av_rescale_q_rnd(
+                pkt.dts, in_stream->time_base, out_stream->time_base, 
+                (enum AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
             pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
             pkt.pos = -1;
-            pkt.stream_index = (pkt.stream_index == audio_stream_index) ? OUT_AUDIO_STREAM_INDEX : OUT_VIDEO_STREAM_INDEX;
+            pkt.stream_index =
+                (pkt.stream_index == audio_stream_index)
+                    ? OUT_AUDIO_STREAM_INDEX
+                    : OUT_VIDEO_STREAM_INDEX;
 
             av_interleaved_write_frame(out_fmt_ctx, &pkt);
             av_packet_unref(&pkt);
@@ -262,3 +273,6 @@ void TranscodeTalker_new_stream(TranscodeTalker *self, ring_buffer *ringbuf) {
     pthread_cond_signal(&self->streaming_cond);
     pthread_mutex_unlock(&self->lock);
 }
+
+
+} // namespace ezlive
