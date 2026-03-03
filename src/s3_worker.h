@@ -12,8 +12,8 @@ enum class s3_task_type {
 
 struct s3_task {
     s3_task_type task_type;
-    char *local_file;
-    char *remote_name;
+    std::string local_file;
+    std::string remote_name;
 };
 
 s3_task s3_upload_task(const char *local, const char *remote);

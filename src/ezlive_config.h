@@ -5,7 +5,8 @@
 
 namespace ezlive {
 
-struct config {
+class config {
+public:
     std::string listening_addr;
     int listening_port;
     std::string bucket;
