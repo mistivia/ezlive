@@ -36,8 +36,8 @@ std::string hls_list::push(const std::string& name, double time)
     }
     std::string deleted = m_lst_files[0];
     for (int i = 0; i < max_len - 1; i++) {
-        m_lst_files[i] = m_lst_files[i + 1];
-        m_lst_times[i] = m_lst_times[i + 1];
+        m_lst_files[i] = std::move(m_lst_files[i + 1]);
+        m_lst_times[i] = std::move(m_lst_times[i + 1]);
     }
     m_lst_files[max_len - 1] = name_copy;
     m_lst_times[max_len - 1] = time;

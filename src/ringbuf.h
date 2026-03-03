@@ -31,9 +31,9 @@ public:
 
 private:
     std::vector<uint8_t> m_buffer;
-    size_t m_size = 0;
-    size_t m_head = 0;
-    size_t m_tail = 0;
+    int64_t m_size = 0;
+    int64_t m_head = 0;
+    int64_t m_tail = 0;
     bool m_full_flag = false;
     bool m_finished_flag = false;
     std::mutex m_lock;

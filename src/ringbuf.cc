@@ -8,16 +8,14 @@ namespace ezlive {
 void ring_buffer::stop() {
     std::unique_lock<std::mutex> lk{m_lock};
     m_finished_flag = true;
-    m_not_empty.notify_one();
+    m_not_empty.notify_all();
 }
 
 size_t ring_buffer::write(const uint8_t *data, size_t len) {
     size_t written = 0;
     std::unique_lock<std::mutex> lk{m_lock};
     while (written < len) {
-        while (m_full_flag) {
-            m_not_full.wait(lk);
-        }
+        m_not_full.wait(lk, [this]() { return !m_full_flag; });
 
         size_t free_space = space();
         size_t to_write = (len - written > free_space) ? free_space : len - written;
@@ -32,41 +30,42 @@ size_t ring_buffer::write(const uint8_t *data, size_t len) {
         if (to_write == free_space) m_full_flag = true;
 
         written += to_write;
+        m_size += to_write;
         m_not_empty.notify_one();
     }
-    m_size += written;
     return written;
 }
 
 size_t ring_buffer::read(uint8_t *data, size_t len) {
-    size_t read = 0;
     std::unique_lock<std::mutex> lk{m_lock};
 
-    while (read < len) {
-        while (m_size == 0) {
-            if (m_finished_flag) {
-                goto end;
-            }
-            m_not_empty.wait(lk);
-        }
-        size_t available = size();
-        size_t to_read = (len - read > available) ? available : len - read;
-
-        size_t first = (to_read > m_buffer.size() - m_tail) ? m_buffer.size() - m_tail : to_read;
-        memcpy(data + read, &m_buffer[0] + m_tail, first);
-
-        size_t second = to_read - first;
-        if (second > 0) memcpy(data + read + first, &m_buffer[0], second);
-
-        m_tail = (m_tail + to_read) % m_buffer.size();
-        m_full_flag = false;
-
-        read += to_read;
-        m_not_full.notify_one();
+    // Wait for data to be available (unless buffer is already finished)
+    if (m_size == 0) {
+        m_not_empty.wait(lk, [this]() { return m_size > 0 || m_finished_flag; });
     }
-end:
-    m_size -= read;
-    return read;
+    
+    if (m_size == 0) {
+        // Buffer empty and finished flag set
+        return 0;
+    }
+    
+    // Read up to min(len, available) bytes, then return
+    size_t available = m_size;
+    size_t to_read = (len > available) ? available : len;
+
+    size_t first = (to_read > m_buffer.size() - m_tail) ? m_buffer.size() - m_tail : to_read;
+    memcpy(data, &m_buffer[0] + m_tail, first);
+
+    size_t second = to_read - first;
+    if (second > 0) memcpy(data + first, &m_buffer[0], second);
+
+    m_tail = (m_tail + to_read) % m_buffer.size();
+    m_full_flag = false;
+
+    m_size -= to_read;
+    m_not_full.notify_one();
+    
+    return to_read;
 }
 
 

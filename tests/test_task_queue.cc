@@ -14,6 +14,7 @@ static void test_constructor()
 
 static void test_push_and_pop_single()
 {
+    printf("running test_push_and_pop_single\n");
     ezlive::task_queue tq(10);
     std::atomic<int> counter{0};
 
@@ -35,6 +36,7 @@ static void test_push_and_pop_single()
 
 static void test_push_and_pop_multiple()
 {
+    printf("running test_push_and_pop_multiple\n");
     ezlive::task_queue tq(5);
     std::atomic<int> counter{0};
 
@@ -61,6 +63,7 @@ static void test_push_and_pop_multiple()
 
 static void test_producer_consumer()
 {
+    printf("running test_producer_consumer\n");
     ezlive::task_queue tq(10);
     std::atomic<int> sum{0};
 
@@ -99,6 +102,7 @@ static void test_producer_consumer()
 
 static void test_capacity_limit()
 {
+    printf("running test_capacity_limit\n");
     // Test that queue blocks when full
     ezlive::task_queue tq(2);
     std::atomic<int> pushed{0};
@@ -129,6 +133,7 @@ static void test_capacity_limit()
 
 static void test_multiple_producers_consumers()
 {
+    printf("running test_multiple_producers_consumers\n");
     ezlive::task_queue tq(20);
     std::atomic<int> counter{0};
     const int num_tasks = 100;
@@ -168,6 +173,7 @@ static void test_multiple_producers_consumers()
 
 static void test_different_task_functions()
 {
+    printf("running test_different_task_functions\n");
     ezlive::task_queue tq(10);
 
     auto add_fn = [](void* arg) {

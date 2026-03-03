@@ -19,6 +19,8 @@ TMP.md
 srt/
 target/
 .bashrc
+.cache/
 .inputrc
 .Xauthority
 build/
+compile_commands.json
