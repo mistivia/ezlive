@@ -18,9 +18,7 @@
 
           src = ./.;
 
-          nativeBuildInputs = with pkgs; [
-            pkg-config
-          ];
+          nativeBuildInputs = with pkgs; [];
 
           buildInputs = with pkgs; [
             ffmpeg
@@ -53,7 +51,6 @@
           buildInputs = with pkgs; [
             gcc15
             gnumake
-            pkg-config
             ffmpeg
             aws-sdk-cpp
             srt
