@@ -9,6 +9,17 @@ private成员变量加m_前缀，比如：
         int m_num;
     };
 
+但是struct和public成员不用加：
+
+    struct struc {
+        int pub_member;
+    };
+
+    class my_type {
+    public:
+        int pub_member;
+    };
+
 函数的大括号另起一行，其他大括号照旧：
 
     void my_func()

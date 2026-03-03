@@ -1,6 +1,8 @@
-#include "transcode_talker.h"
+#include "transmuxer.h"
 #include "fsutils.h"
 #include "ringbuf.h"
+
+#include <string>
 
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
@@ -16,37 +18,6 @@
 #else
     #define TMP_PREFIX "/tmp/ezlive"
 #endif
-
-void HlsList_init(HlsList *lst) {
-    lst->len = 0;
-}
-
-char * HlsList_push(HlsList *lst, char *name, double time) {
-    name = strdup(name);
-    if (lst->len < 15) {
-        lst->files[lst->len] = name;
-        lst->times[lst->len] = time;
-        lst->len++;
-        return NULL;
-    }
-    free(lst->files[0]);
-    for (int i = 0; i < 14; i++) {
-        lst->files[i] = lst->files[i+1];
-        lst->times[i] = lst->times[i+1];
-    }
-    char *ret = lst->files[0];
-    lst->files[14] = name;
-    lst->times[14] = time;
-    return ret;
-}
-
-void HlsList_clear(HlsList *lst) {
-    for (int i = 0; i < lst->len; i++) {
-        free(lst->files[i]);
-    }
-    lst->len = 0;
-}
-
 
 static int wait_for_new_stream(TranscodeTalker *self) {
     while (pthread_cond_wait(&self->streaming_cond, &self->lock)) {
@@ -127,30 +98,6 @@ static void finalize_output_file(AVFormatContext *out_fmt_ctx) {
 
 #define SEGMENT_DURATION 5
 
-static void update_m3u8(HlsList *lst, int last_seg) {
-    int first_seg = last_seg - lst->len + 1;
-    char out_filename[256] = {0};
-    tmp_local_filename(TMP_PREFIX, out_filename);
-    FILE *fp = fopen(out_filename, "w");
-    if (fp == NULL) {
-        fprintf(stderr, "failed to open %s for output.\n", out_filename);
-        exit(-1);
-    }
-    if (lst->len == 0) {
-        fprintf(fp, "\n");
-    } else {
-        fprintf(fp, "#EXTM3U\n");
-        fprintf(fp, "#EXT-X-VERSION:3\n");
-        fprintf(fp, "#EXT-X-TARGETDURATION:10\n");
-        fprintf(fp, "#EXT-X-MEDIA-SEQUENCE:%d\n", first_seg);
-        for (int i = 0; i < lst->len; i++) {
-            fprintf(fp, "#EXTINF:%lf\n", lst->times[i]);
-            fprintf(fp, "%s\n", lst->files[i]);
-        }
-    }
-    fclose(fp);
-    upload_file(out_filename, "stream.m3u8");
-}
 
 static void* check_timer(void *vself) {
     TranscodeTalker *self = vself;
@@ -159,12 +106,12 @@ static void* check_timer(void *vself) {
         time_t now;
         time(&now);
         pthread_mutex_lock(&self->lock);
-        if (self->lst.len > 0 && now - self->last_updated > 60) {
-            for (int i = 0; i < self->lst.len; i++) {
-                remove_remote(self->lst.files[i]);
+        if (self->m_lst.len() > 0 && now - self->last_updated > 60) {
+            for (int i = 0; i < self->m_lst.len(); i++) {
+                remove_remote(self->m_lst.file(i));
             }
-            HlsList_clear(&self->lst);
-            update_m3u8(&self->lst, -1);
+            self->m_lst.clear();
+            self->m_lst.update_m3u8(-1);
         }
         pthread_mutex_unlock(&self->lock);
     }
@@ -246,10 +193,10 @@ void* TranscodeTalker_main (void *vself) {
                     finalize_output_file(out_fmt_ctx);
                     ts_filename(remote_prefix, segment_index, remote_filename);
                     upload_file(out_filename, remote_filename);
-                    char *deleted = HlsList_push(&self->lst, remote_filename, (pts_time - segment_start_pts) / (double)AV_TIME_BASE);
-                    update_m3u8(&self->lst, segment_index);
-                    if (deleted != NULL) {
-                        remove_remote(deleted);
+                    std::string deleted = self->m_lst.push(remote_filename, (pts_time - segment_start_pts) / (double)AV_TIME_BASE);
+                    self->m_lst.update_m3u8(segment_index);
+                    if (!deleted.empty()) {
+                        remove_remote(deleted.c_str());
                     }
                     segment_index++;
                     
@@ -284,10 +231,10 @@ void* TranscodeTalker_main (void *vself) {
         self->last_updated = now;
         ts_filename(remote_prefix, segment_index, remote_filename);
         upload_file(out_filename, remote_filename);
-        char *deleted = HlsList_push(&self->lst, remote_filename, (pts_time - segment_start_pts) / (double)AV_TIME_BASE);
-        update_m3u8(&self->lst, segment_index);
-        if (deleted != NULL) {
-            remove_remote(deleted);
+        std::string deleted = self->m_lst.push(remote_filename, (pts_time - segment_start_pts) / (double)AV_TIME_BASE);
+        self->m_lst.update_m3u8(segment_index);
+        if (!deleted.empty()) {
+            remove_remote(deleted.c_str());
         }
         segment_index++;
 
@@ -307,7 +254,6 @@ void TranscodeTalker_init(TranscodeTalker *self) {
     pthread_cond_init(&self->streaming_cond, NULL);
     self->stream = NULL;
     self->quit = false;
-    HlsList_init(&self->lst);
 }
 
 void TranscodeTalker_new_stream(TranscodeTalker *self, ring_buffer *ringbuf) {

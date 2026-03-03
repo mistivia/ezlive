@@ -11,11 +11,11 @@ ifeq ($(findstring MINGW,$(UNAME)),MINGW)
 	LDFLAGS += -lws2_32
 endif
 
-C_SOURCES := $(shell find . -maxdepth 1 -name '*.c')
-CPP_SOURCES := $(shell find . -maxdepth 1 -name '*.cc')
+C_SOURCES := $(shell find src -name '*.c')
+CXX_SOURCES := $(shell find src -name '*.cc')
 
-C_OBJS := $(C_SOURCES:.c=.o)
-CPP_OBJS := $(CPP_SOURCES:.cpp=.o)
+C_OBJS := $(C_SOURCES:src/%.c=build/%.o)
+CXX_OBJS := $(CXX_SOURCES:src/%.cc=build/%.o)
 
 TARGET := ezlive
 
@@ -26,16 +26,19 @@ docker: ezlive-docker-image.tar.gz
 ezlive-docker-image.tar.gz: all
 	sh ./scripts/build-docker.sh
 
-$(TARGET): $(C_OBJS) $(CPP_OBJS)
-	$(CXX) $(C_OBJS) $(CPP_OBJS) -o $@ $(LDFLAGS)
+$(TARGET): build $(C_OBJS) $(CXX_OBJS)
+	$(CXX) $(C_OBJS) $(CXX_OBJS) -o $@ $(LDFLAGS)
 
-%.o: %.c
+build:
+	mkdir -p build
+
+build/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.o: %.cpp
+build/%.o: src/%.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(C_OBJS) $(CPP_OBJS) $(TARGET)
+	rm -rf build $(TARGET)
 
 .PHONY: all clean
