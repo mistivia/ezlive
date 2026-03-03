@@ -51,3 +51,5 @@ namespace的右大括号要加注释：
 测试断言只使用 <cassert>
 
 用make test运行测试
+
+构造函数优先用{}，例如 my_type my_obj{};

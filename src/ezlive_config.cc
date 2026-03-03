@@ -4,6 +4,8 @@
 #include <cctype>
 #include <string>
 
+#include "utils.h"
+
 namespace ezlive {
 
 std::unique_ptr<config> g_config;
@@ -48,6 +50,7 @@ int config::load(const char *filename)
         fprintf(stderr, "failed to open config file: %s\n", filename);
         return -1;
     }
+    defer fclose_defer{[&]() { fclose(fp); }};
 
     char buf[1024];
     while (fgets(buf, sizeof(buf), fp)) {
@@ -93,7 +96,6 @@ int config::load(const char *filename)
         }
     }
 
-    fclose(fp);
     int ret = validate();
     if (ret != 0) {
         return ret;
