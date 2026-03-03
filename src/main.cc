@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "ezlive_config.h"
+#include "s3_client.h"
 #include "srtserver.h"
 #include "ringbuf.h"
 #include "transmuxer.h"
@@ -12,10 +13,17 @@ namespace ezlive {
 
 class main_ctx : public srt_callback {
 public:
+    void start_transmuxer() {
+        m_transmuxer.start();
+    }
+    void stop_transmuxer() {
+        m_transmuxer.stop();
+    }
+
     void on_srt_start() override
     {
         m_ringbuf = std::make_unique<ring_buffer>(4096);
-        // TODO TranscodeTalker_new_stream(&m_transmux, rb);
+        m_transmuxer.new_stream(m_ringbuf.get());
     }
 
     void on_srt_stop() override
@@ -30,11 +38,11 @@ public:
 
 private:
     std::unique_ptr<ring_buffer> m_ringbuf;
-    // TODO Transmuxer m_transmux;
+    transmuxer m_transmuxer;
 };
 
-
-void cleantmpfile() {
+void cleantmpfile()
+{
 #ifdef _WIN32
     system("del tmp*");
 #else
@@ -46,16 +54,16 @@ void cleantmpfile() {
 
 using namespace ezlive;
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     cleantmpfile();
-    ezlive_config = new EZLiveConfig{};
-    EZLiveConfig_init(ezlive_config);
+    g_config = std::make_unique<config>();
     bool succ = {0};
     if (argc == 1) {
-        succ = EZLiveConfig_load(ezlive_config, "./config");
+        succ = (g_config->load("./config") == 0);
 #if defined(_WIN32)
         if (!succ) {
-            succ = EZLiveConfig_load(ezlive_config, "./config.txt");
+            succ = (g_config->load("./config.txt") == 0);
         }
 #endif
         if (!succ) {
@@ -63,7 +71,7 @@ int main(int argc, char **argv) {
             return -1;
         }
     } else if (argc == 2) {
-        if (!EZLiveConfig_load(ezlive_config, argv[1])) {
+        if (g_config->load(argv[1]) != 0) {
             fprintf(stderr, "Failed to load config.\n");
             return -1;
         }
@@ -71,23 +79,18 @@ int main(int argc, char **argv) {
         fprintf(stderr, "wrong args.\n");
         exit(-1);
     }
-    int ret = {0};
-    if ((ret = EZLiveConfig_validate(ezlive_config)) < 0) {
-        fprintf(stderr, "ezlive config error: %d.\n", ret);
-        exit(-1);
-    }
+
     srand((unsigned) time(NULL));
     main_ctx ctx{};
+    s3_client::get_instance().init();
     s3_worker_init();
     s3_worker_push(s3_clear_task());
 
-    std::thread transmux_thread{[&]() {
-        // TODO TranscodeTalker_main(&ctx);
-    }};
     std::thread s3worker_thread{[]() {
         s3_worker_main(NULL);
     }};
-    
+    ctx.start_transmuxer();
     start_srt_server(static_cast<srt_callback*>(&ctx));
+    ctx.stop_transmuxer();
     return 0;
 }

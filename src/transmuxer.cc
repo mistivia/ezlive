@@ -5,6 +5,10 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <chrono>
+#include <ctime>
+#include <cstdio>
+#include <unistd.h>
 
 extern "C" {
     #include <libavutil/mathematics.h>
@@ -13,7 +17,6 @@ extern "C" {
     #include <libavutil/mem.h>
     #include <libavutil/timestamp.h>
     #include <time.h>
-    #include <unistd.h>
 }
 
 #include "utils.h"
@@ -21,15 +24,7 @@ extern "C" {
 
 namespace ezlive {
 
-static int wait_for_new_stream(TranscodeTalker *self) {
-    while (pthread_cond_wait(&self->streaming_cond, &self->lock)) {
-        if (self->quit) {
-            return 0;
-        }
-        if (self->stream != NULL) break;
-    }
-    return 1;
-}
+namespace {
 
 typedef struct {
     AVStream *audio_stream;
@@ -38,12 +33,14 @@ typedef struct {
 
 #define OUT_VIDEO_STREAM_INDEX 0
 #define OUT_AUDIO_STREAM_INDEX 1
+#define SEGMENT_DURATION 5
 
-static StreamPair start_new_output_file(
+StreamPair start_new_output_file(
         AVFormatContext *in_fmt_ctx,
         AVFormatContext **out_fmt_ctx,
         const char *out_filename,
-        int aidx, int vidx) {
+        int aidx, int vidx)
+{
     avformat_alloc_output_context2(out_fmt_ctx, NULL, "mpegts", out_filename);
 
     AVStream *out_video_stream = avformat_new_stream(*out_fmt_ctx, NULL);
@@ -58,29 +55,29 @@ static StreamPair start_new_output_file(
             exit(-1);
         }
     }
-    
+
     if (avformat_write_header(*out_fmt_ctx, NULL) < 0) {
         fprintf(stderr, "avformat_write_header failed.\n");
         abort();
     }
     return (StreamPair) {
-        .audio_stream = out_audio_stream,
-        .video_stream = out_video_stream,
+        .audio_stream = out_video_stream,
+        .video_stream = out_audio_stream,
     };
 }
 
-static int
-ring_buffer_avio_read(void *ctx, uint8_t *buf, int buf_size)
+int ring_buffer_avio_read(void *ctx, uint8_t *buf, int buf_size)
 {
-    ring_buffer *rb = ctx;
-    size_t n = ring_buffer_read(rb, buf, buf_size);
+    ring_buffer *rb = (ring_buffer*)ctx;
+    size_t n = rb->read(buf, buf_size);
     if (n == 0 && buf_size > 0) {
         return AVERROR_EOF;
     }
     return (int)n;
 }
 
-AVIOContext* create_avio_from_ring_buffer(ring_buffer *rb, int buffer_size) {
+AVIOContext* create_avio_from_ring_buffer(ring_buffer *rb, int buffer_size)
+{
     uint8_t *avio_buf = (uint8_t*)av_malloc(buffer_size);
     AVIOContext *avio = avio_alloc_context(
         avio_buf, buffer_size,
@@ -92,7 +89,8 @@ AVIOContext* create_avio_from_ring_buffer(ring_buffer *rb, int buffer_size) {
     return avio;
 }
 
-static void finalize_output_file(AVFormatContext *out_fmt_ctx) {
+void finalize_output_file(AVFormatContext *out_fmt_ctx)
+{
     av_write_trailer(out_fmt_ctx);
     if (!(out_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
         avio_closep(&out_fmt_ctx->pb);
@@ -100,40 +98,94 @@ static void finalize_output_file(AVFormatContext *out_fmt_ctx) {
     avformat_free_context(out_fmt_ctx);
 }
 
-#define SEGMENT_DURATION 5
+} //anonymous namespace
 
-
-static void* check_timer(void *vself) {
-    TranscodeTalker *self = vself;
-    while (1) {
-        sleep(15);
-        time_t now;
-        time(&now);
-        pthread_mutex_lock(&self->lock);
-        if (self->m_lst.len() > 0 && now - self->last_updated > 60) {
-            for (int i = 0; i < self->m_lst.len(); i++) {
-                remove_remote(self->m_lst.file(i));
-            }
-            self->m_lst.clear();
-            self->m_lst.update_m3u8(-1);
-        }
-        pthread_mutex_unlock(&self->lock);
-    }
-    return NULL;   
+transmuxer::transmuxer()
+    : m_stream(nullptr)
+    , m_quit(false)
+    , m_last_updated(0)
+{
 }
 
-void* TranscodeTalker_main (void *vself) {
+transmuxer::~transmuxer()
+{
+    stop();
+}
+
+void transmuxer::start()
+{
+    m_main_thread = std::thread(&transmuxer::main_loop, this);
+    m_check_thread = std::thread(&transmuxer::check_timer_loop, this);
+}
+
+void transmuxer::stop()
+{
+    {
+        std::lock_guard<std::mutex> lock(m_lock);
+        m_quit = true;
+    }
+    m_streaming_cond.notify_all();
+    if (m_main_thread.joinable()) {
+        m_main_thread.join();
+    }
+    if (m_check_thread.joinable()) {
+        m_check_thread.join();
+    }
+}
+
+void transmuxer::new_stream(ring_buffer *ringbuf)
+{
+    std::lock_guard<std::mutex> lock(m_lock);
+    m_stream = ringbuf;
+    m_streaming_cond.notify_one();
+}
+
+int transmuxer::wait_for_new_stream()
+{
+    std::unique_lock<std::mutex> lock(m_lock, std::defer_lock);
+    while (true) {
+        if (m_quit) {
+            return 0;
+        }
+        if (m_stream != nullptr) {
+            return 1;
+        }
+        m_streaming_cond.wait(lock);
+    }
+}
+
+bool transmuxer::should_quit()
+{
+    std::lock_guard<std::mutex> lock(m_lock);
+    return m_quit;
+}
+
+void transmuxer::check_timer_loop()
+{
+    while (!should_quit()) {
+        std::this_thread::sleep_for(std::chrono::seconds(15));
+        std::time_t now = std::time(nullptr);
+        std::lock_guard<std::mutex> lock(m_lock);
+        if (m_lst.len() > 0 && now - m_last_updated > 60) {
+            for (int i = 0; i < m_lst.len(); i++) {
+                remove_remote(m_lst.file(i));
+            }
+            m_lst.clear();
+            m_lst.update_m3u8(-1);
+        }
+    }
+}
+
+void transmuxer::main_loop()
+{
     char remote_prefix[9] = {0};
     char remote_filename[256] = {0};
-    TranscodeTalker *self = vself;
     int segment_index = 0;
     tmp_ts_prefix(remote_prefix);
-    pthread_t check_thread = {0};
-    pthread_create(&check_thread, NULL, check_timer, self);
-    pthread_mutex_lock(&self->lock);
-    while (wait_for_new_stream(self)) {
+    std::lock_guard<std::mutex> lk{m_lock};
+    while (wait_for_new_stream()) {
         AVFormatContext *in_fmt_ctx = avformat_alloc_context();
-        in_fmt_ctx->pb = create_avio_from_ring_buffer(self->stream, 4096);
+        in_fmt_ctx->pb = create_avio_from_ring_buffer(m_stream, 4096);
         const AVInputFormat *input_fmt = av_find_input_format("mpegts");
         if (avformat_open_input(&in_fmt_ctx, NULL, input_fmt, NULL) < 0) {
             fprintf(stderr, "Could not open input file\n");
@@ -146,7 +198,7 @@ void* TranscodeTalker_main (void *vself) {
         }
 
         int video_stream_index = -1, audio_stream_index = -1;
-        for (int i = 0; i < in_fmt_ctx->nb_streams; i++) {
+        for (unsigned int i = 0; i < in_fmt_ctx->nb_streams; i++) {
             if (in_fmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
                 video_stream_index = i;
             else if (in_fmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
@@ -191,19 +243,18 @@ void* TranscodeTalker_main (void *vself) {
                 if (pkt.stream_index == video_stream_index && (pkt.flags & AV_PKT_FLAG_KEY)) {
                     // close current ts
                     printf("new ts: %ld\n", pts_time - segment_start_pts);
-                    time_t now = {0};
-                    time(&now);
-                    self->last_updated = now;
+                    std::time_t now = std::time(nullptr);
+                    m_last_updated = now;
                     finalize_output_file(out_fmt_ctx);
                     ts_filename(remote_prefix, segment_index, remote_filename);
                     upload_file(out_filename, remote_filename);
-                    std::string deleted = self->m_lst.push(remote_filename, (pts_time - segment_start_pts) / (double)AV_TIME_BASE);
-                    self->m_lst.update_m3u8(segment_index);
+                    std::string deleted = m_lst.push(remote_filename, (pts_time - segment_start_pts) / (double)AV_TIME_BASE);
+                    m_lst.update_m3u8(segment_index);
                     if (!deleted.empty()) {
                         remove_remote(deleted.c_str());
                     }
                     segment_index++;
-                    
+
                     // open new ts
                     segment_start_pts = pts_time;
                     tmp_local_filename(TMP_PREFIX.c_str(), out_filename);
@@ -219,10 +270,10 @@ void* TranscodeTalker_main (void *vself) {
                 }
             }
             pkt.pts = av_rescale_q_rnd(
-                pkt.pts, in_stream->time_base, out_stream->time_base, 
+                pkt.pts, in_stream->time_base, out_stream->time_base,
                 (enum AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
             pkt.dts = av_rescale_q_rnd(
-                pkt.dts, in_stream->time_base, out_stream->time_base, 
+                pkt.dts, in_stream->time_base, out_stream->time_base,
                 (enum AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
             pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
             pkt.pos = -1;
@@ -237,13 +288,11 @@ void* TranscodeTalker_main (void *vself) {
         printf("new ts: %ld\n", pts_time - segment_start_pts);
 
         finalize_output_file(out_fmt_ctx);
-        time_t now = {0};
-        time(&now);
-        self->last_updated = now;
+        m_last_updated = std::time(nullptr);
         ts_filename(remote_prefix, segment_index, remote_filename);
         upload_file(out_filename, remote_filename);
-        std::string deleted = self->m_lst.push(remote_filename, (pts_time - segment_start_pts) / (double)AV_TIME_BASE);
-        self->m_lst.update_m3u8(segment_index);
+        std::string deleted = m_lst.push(remote_filename, (pts_time - segment_start_pts) / (double)AV_TIME_BASE);
+        m_lst.update_m3u8(segment_index);
         if (!deleted.empty()) {
             remove_remote(deleted.c_str());
         }
@@ -252,27 +301,8 @@ void* TranscodeTalker_main (void *vself) {
         av_free(in_fmt_ctx->pb->buffer);
         avio_context_free(&in_fmt_ctx->pb);
         avformat_close_input(&in_fmt_ctx);
-        ring_buffer_destroy(self->stream);
-        self->stream = NULL;
-        free(self->stream);
+        m_stream = nullptr;
     }
-    pthread_mutex_unlock(&self->lock);
-    return NULL;
 }
 
-void TranscodeTalker_init(TranscodeTalker *self) {
-    pthread_mutex_init(&self->lock, NULL);
-    pthread_cond_init(&self->streaming_cond, NULL);
-    self->stream = NULL;
-    self->quit = false;
-}
-
-void TranscodeTalker_new_stream(TranscodeTalker *self, ring_buffer *ringbuf) {
-    pthread_mutex_lock(&self->lock);
-    self->stream = ringbuf;
-    pthread_cond_signal(&self->streaming_cond);
-    pthread_mutex_unlock(&self->lock);
-}
-
-
-} // namespace ezlive
+} //namespace ezlive
