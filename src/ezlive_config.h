@@ -1,24 +1,27 @@
-#ifndef EZLIVE_CONFIG_H_
-#define EZLIVE_CONFIG_H_
+#pragma once
 
-#include <stdbool.h>
+#include <string>
+#include <memory>
 
-typedef struct {
-    const char *listening_addr;
+namespace ezlive {
+
+struct config {
+    std::string listening_addr;
     int listening_port;
-    const char *bucket;
-    const char *endpoint;
-    const char *s3_path;
-    const char *access_key;
-    const char *secret_key;
-    const char *region;
-    const char *key;
-} EZLiveConfig;
+    std::string bucket;
+    std::string endpoint;
+    std::string s3_path;
+    std::string access_key;
+    std::string secret_key;
+    std::string region;
+    std::string key;
 
-extern EZLiveConfig *ezlive_config;
+    explicit config();
+    int load(const char *filename);
+private:
+    int validate();
+};
 
-void EZLiveConfig_init(EZLiveConfig *self);
-bool EZLiveConfig_load(EZLiveConfig *self, const char *filename);
-int EZLiveConfig_validate(EZLiveConfig *self);
+extern std::unique_ptr<config> g_config;
 
-#endif
+} // namespace ezlive
