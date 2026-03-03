@@ -40,13 +40,13 @@ void s3_client::init()
     Aws::InitAPI(aws_options);
     Aws::S3::S3ClientConfiguration config;
     Aws::Auth::AWSCredentials credentials;
-    config.endpointOverride = ezlive_config->endpoint;
-    config.region = ezlive_config->region;
+    config.endpointOverride = g_config->endpoint;
+    config.region = g_config->region;
 #if !defined(_WIN32)
     config.checksumConfig.requestChecksumCalculation = Aws::Client::RequestChecksumCalculation::WHEN_REQUIRED;
     config.checksumConfig.responseChecksumValidation = Aws::Client::ResponseChecksumValidation::WHEN_REQUIRED;
 #endif
-    credentials = Aws::Auth::AWSCredentials(ezlive_config->access_key, ezlive_config->secret_key);
+    credentials = Aws::Auth::AWSCredentials(g_config->access_key, g_config->secret_key);
     m_s3client = new Aws::S3::S3Client(credentials, nullptr, config);
 }
 
@@ -54,7 +54,7 @@ void s3_client::put(const char *filename, const char *object_name)
 {
     while (1) {
         Aws::S3::Model::PutObjectRequest request;
-        request.SetBucket(ezlive_config->bucket);
+        request.SetBucket(g_config->bucket);
         request.SetKey(object_name);
         std::shared_ptr<Aws::IOStream> inputData =
                 std::make_shared<Aws::FStream>(filename, std::ios_base::in | std::ios_base::binary);
@@ -74,18 +74,18 @@ void s3_client::put(const char *filename, const char *object_name)
             sleep(3);
             continue;
         } else {
-            printf("Added object '%s' to bucket '%s'.\n", object_name, ezlive_config->bucket);
+            printf("Added object '%s' to bucket '%s'.\n", object_name, g_config->bucket.c_str());
             break;
         }
     }
 }
 
-void s3_client::del(const char *object_name)
+void s3_client::remove(const char *object_name)
 {
     Aws::S3::Model::DeleteObjectRequest request;
 
     request.WithKey(object_name)
-            .WithBucket(ezlive_config->bucket);
+            .WithBucket(g_config->bucket);
 
     Aws::S3::Model::DeleteObjectOutcome outcome =
             m_s3client->DeleteObject(request);
@@ -102,7 +102,7 @@ void s3_client::del(const char *object_name)
 void s3_client::clear()
 {
     Aws::S3::Model::ListObjectsV2Request list_req;
-    list_req.WithBucket(ezlive_config->bucket).WithPrefix(ezlive_config->s3_path);
+    list_req.WithBucket(g_config->bucket).WithPrefix(g_config->s3_path);
 
     auto list_outcome = m_s3client->ListObjectsV2(list_req);
     if (!list_outcome.IsSuccess()) {
@@ -122,7 +122,7 @@ void s3_client::clear()
     }
     if (!objects_to_delete.empty()) {
         for (auto &x : objects_to_delete) {
-            del(x.c_str());
+            remove(x.c_str());
         }
     } else {
         std::cout << "No .ts files found. No need to clear." << std::endl;

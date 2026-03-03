@@ -16,7 +16,7 @@ public:
 
     void put(const char *filename, const char *object_name);
 
-    void del(const char *object_name);
+    void remove(const char *object_name);
 
     void clear();
 
