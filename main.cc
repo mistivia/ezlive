@@ -15,7 +15,7 @@ public:
     void on_srt_start() override
     {
         m_ringbuf = std::make_unique<ring_buffer>(4096);
-        TranscodeTalker_new_stream(&m_transmux, rb);
+        // TODO TranscodeTalker_new_stream(&m_transmux, rb);
     }
 
     void on_srt_stop() override
@@ -30,7 +30,7 @@ public:
 
 private:
     std::unique_ptr<ring_buffer> m_ringbuf;
-    TranscodeTalker m_transmux;
+    // TODO Transmuxer m_transmux;
 };
 
 
@@ -78,13 +78,13 @@ int main(int argc, char **argv) {
     s3_worker_push(s3_clear_task());
 
     std::thread transmux_thread{[&]() {
-        TranscodeTalker_main(&ctx);
+        // TODO TranscodeTalker_main(&ctx);
     }};
     std::thread s3worker_thread{[]() {
         s3_worker_main(NULL);
     }};
     
-    start_srt_server(&ctx);
+    start_srt_server(static_cast<srt_callback*>(&ctx));
     return 0;
 }
 
