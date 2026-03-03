@@ -1,5 +1,4 @@
-#ifndef TASK_QUEUE_H_
-#define TASK_QUEUE_H_
+#pragma once
 
 #include <pthread.h>
 
@@ -25,4 +24,3 @@ void TaskQueue_push(TaskQueue *self, TaskFn task, void *arg);
 
 void TaskQueue_pop(TaskQueue *self, TaskFn *task, void **arg);
 
-#endif

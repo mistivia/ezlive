@@ -16,13 +16,26 @@
 
 #include <unistd.h>
 
-namespace {
+namespace ezlive {
 
-Aws::S3::S3Client *s3client;
-
+s3_client::s3_client()
+    : m_s3client(nullptr)
+{
 }
 
-void S3Client_init() {
+s3_client::~s3_client()
+{
+    delete m_s3client;
+}
+
+s3_client& s3_client::get_instance()
+{
+    static s3_client instance;
+    return instance;
+}
+
+void s3_client::init()
+{
     Aws::SDKOptions aws_options;
     Aws::InitAPI(aws_options);
     Aws::S3::S3ClientConfiguration config;
@@ -34,10 +47,11 @@ void S3Client_init() {
     config.checksumConfig.responseChecksumValidation = Aws::Client::ResponseChecksumValidation::WHEN_REQUIRED;
 #endif
     credentials = Aws::Auth::AWSCredentials(ezlive_config->access_key, ezlive_config->secret_key);
-    s3client = new Aws::S3::S3Client(credentials, nullptr, config);
+    m_s3client = new Aws::S3::S3Client(credentials, nullptr, config);
 }
 
-void S3Client_put(const char *filename, const char *object_name) {
+void s3_client::put(const char *filename, const char *object_name)
+{
     while (1) {
         Aws::S3::Model::PutObjectRequest request;
         request.SetBucket(ezlive_config->bucket);
@@ -53,7 +67,7 @@ void S3Client_put(const char *filename, const char *object_name) {
         request.SetBody(inputData);
 
         Aws::S3::Model::PutObjectOutcome outcome =
-                s3client->PutObject(request);
+                m_s3client->PutObject(request);
 
         if (!outcome.IsSuccess()) {
             fprintf(stderr, "Error: putObject: %s.\n", outcome.GetError().GetMessage().c_str());
@@ -66,14 +80,15 @@ void S3Client_put(const char *filename, const char *object_name) {
     }
 }
 
-void S3Client_delete(const char *object_name) {
+void s3_client::del(const char *object_name)
+{
     Aws::S3::Model::DeleteObjectRequest request;
 
     request.WithKey(object_name)
             .WithBucket(ezlive_config->bucket);
 
     Aws::S3::Model::DeleteObjectOutcome outcome =
-            s3client->DeleteObject(request);
+            m_s3client->DeleteObject(request);
 
     if (!outcome.IsSuccess()) {
         auto err = outcome.GetError();
@@ -84,11 +99,12 @@ void S3Client_delete(const char *object_name) {
     }
 }
 
-void S3Client_clear() {
+void s3_client::clear()
+{
     Aws::S3::Model::ListObjectsV2Request list_req;
     list_req.WithBucket(ezlive_config->bucket).WithPrefix(ezlive_config->s3_path);
 
-    auto list_outcome = s3client->ListObjectsV2(list_req);
+    auto list_outcome = m_s3client->ListObjectsV2(list_req);
     if (!list_outcome.IsSuccess()) {
         fprintf(stderr, "ListObjectsV2 error: %s\n", 
             list_outcome.GetError().GetMessage().c_str());
@@ -106,9 +122,11 @@ void S3Client_clear() {
     }
     if (!objects_to_delete.empty()) {
         for (auto &x : objects_to_delete) {
-            S3Client_delete(x.c_str());
+            del(x.c_str());
         }
     } else {
         std::cout << "No .ts files found. No need to clear." << std::endl;
     }
 }
+
+} // namespace ezlive

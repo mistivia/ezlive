@@ -18,3 +18,6 @@ TASK.md
 TMP.md
 srt/
 target/
+.bashrc
+.inputrc
+.Xauthority

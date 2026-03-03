@@ -1,44 +1,44 @@
-#ifndef RINGBUF_H_
-#define RINGBUF_H_
+#pragma once
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <pthread.h>
+#include <vector>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
-typedef struct {
-    uint8_t *buffer;
-    size_t head;
-    size_t tail;
-    size_t max;
-    bool full_flag;
-    bool finished_flag;
+namespace ezlive {
 
-    pthread_mutex_t mutex;
-    pthread_cond_t not_empty_cond;
-    pthread_cond_t not_full_cond;
-} RingBuffer;
+class ring_buffer {
+public:
+    ring_buffer(size_t sz)
+        : m_buffer(sz, 0)
+    {}
 
-void RingBuffer_init(RingBuffer *self, size_t size);
+    size_t size()
+    {
+        return m_size;
+    }
+    
+    size_t space()
+    {
+        return m_buffer.size() - m_size;
+    }
+    
+    size_t write(const uint8_t *data, size_t len);
+    
+    size_t read(uint8_t *data, size_t len);
+    
+    void stop();
 
-void RingBuffer_destroy(RingBuffer *self);
+private:
+    std::vector<uint8_t> m_buffer;
+    size_t m_size = 0;
+    size_t m_head = 0;
+    size_t m_tail = 0;
+    bool m_full_flag = false;
+    bool m_finished_flag = false;
+    std::mutex m_lock;
+    std::condition_variable m_not_empty;
+    std::condition_variable m_not_full;
+};
 
-size_t RingBuffer_size(RingBuffer *self);
-
-size_t RingBuffer_space(RingBuffer *self);
-
-size_t RingBuffer_write(RingBuffer *self, const uint8_t *data, size_t len);
-
-bool RingBuffer_write_word16le(RingBuffer *self, uint16_t x);
-bool RingBuffer_write_word24le(RingBuffer *self, uint32_t x);
-bool RingBuffer_write_word32le(RingBuffer *self, uint32_t x);
-bool RingBuffer_write_word16be(RingBuffer *self, uint16_t x);
-bool RingBuffer_write_word24be(RingBuffer *self, uint32_t x);
-bool RingBuffer_write_word32be(RingBuffer *self, uint32_t x);
-bool RingBuffer_write_char(RingBuffer *self, uint8_t x);
-
-size_t RingBuffer_read(RingBuffer *self, uint8_t *data, size_t len);
-
-void RingBuffer_end(RingBuffer *self);
-
-#endif
+} // ezlive

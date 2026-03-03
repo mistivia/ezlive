@@ -96,22 +96,22 @@ static StreamPair start_new_output_file(
     };
 }
 
-static int RingBuffer_avio_read(void *ctx, uint8_t *buf, int buf_size) {
-    RingBuffer *rb = ctx;
-    size_t n = RingBuffer_read(rb, buf, buf_size);
+static int ring_buffer_avio_read(void *ctx, uint8_t *buf, int buf_size) {
+    ring_buffer *rb = ctx;
+    size_t n = ring_buffer_read(rb, buf, buf_size);
     if (n == 0 && buf_size > 0) {
         return AVERROR_EOF;
     }
     return (int)n;
 }
 
-AVIOContext* create_avio_from_ringbuffer(RingBuffer *rb, int buffer_size) {
+AVIOContext* create_avio_from_ring_buffer(ring_buffer *rb, int buffer_size) {
     uint8_t *avio_buf = av_malloc(buffer_size);
     AVIOContext *avio = avio_alloc_context(
         avio_buf, buffer_size,
         0,
         rb,
-        RingBuffer_avio_read,
+        ring_buffer_avio_read,
         NULL,
         NULL);
     return avio;
@@ -182,7 +182,7 @@ void* TranscodeTalker_main (void *vself) {
     pthread_mutex_lock(&self->lock);
     while (wait_for_new_stream(self)) {
         AVFormatContext *in_fmt_ctx = avformat_alloc_context();
-        in_fmt_ctx->pb = create_avio_from_ringbuffer(self->stream, 4096);
+        in_fmt_ctx->pb = create_avio_from_ring_buffer(self->stream, 4096);
         const AVInputFormat *input_fmt = av_find_input_format("mpegts");
         if (avformat_open_input(&in_fmt_ctx, NULL, input_fmt, NULL) < 0) {
             fprintf(stderr, "Could not open input file\n");
@@ -294,7 +294,7 @@ void* TranscodeTalker_main (void *vself) {
         av_free(in_fmt_ctx->pb->buffer);
         avio_context_free(&in_fmt_ctx->pb);
         avformat_close_input(&in_fmt_ctx);
-        RingBuffer_destroy(self->stream);
+        ring_buffer_destroy(self->stream);
         self->stream = NULL;
         free(self->stream);
     }
@@ -310,7 +310,7 @@ void TranscodeTalker_init(TranscodeTalker *self) {
     HlsList_init(&self->lst);
 }
 
-void TranscodeTalker_new_stream(TranscodeTalker *self, RingBuffer *ringbuf) {
+void TranscodeTalker_new_stream(TranscodeTalker *self, ring_buffer *ringbuf) {
     pthread_mutex_lock(&self->lock);
     self->stream = ringbuf;
     pthread_cond_signal(&self->streaming_cond);
