@@ -125,7 +125,7 @@ void s3_client::clear()
             remove(x.c_str());
         }
     } else {
-        std::cout << "No .ts files found. No need to clear." << std::endl;
+        printf("No .ts files found. No need to clear.\n");
     }
 }
 

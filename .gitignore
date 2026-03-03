@@ -23,4 +23,5 @@ target/
 .inputrc
 .Xauthority
 build/
+result
 compile_commands.json
