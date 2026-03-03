@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := -g -Wall -fno-exceptions -std=c++20
+CXXFLAGS := -g -Wall -fno-exceptions -std=gnu++17
 UNAME := $(shell uname -s)
 LDFLAGS := -g -lsrt \
 	-lavformat -lavutil -lavcodec \
