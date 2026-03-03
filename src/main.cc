@@ -83,7 +83,6 @@ int main(int argc, char **argv)
     srand((unsigned) time(NULL));
     main_ctx ctx{};
     s3_client::get_instance().init();
-    s3_worker_init();
     s3_worker_push(s3_clear_task());
 
     std::thread s3worker_thread{[]() {

@@ -34,12 +34,14 @@ $(TARGET): build $(C_OBJS) $(CXX_OBJS)
 build:
 	mkdir -p build
 
-build/%.o: src/%.cc
+build/%.o: src/%.cc | build
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Test binaries compilation pattern - standalone tests
-build/test_%: tests/test_%.cc $(CXX_OBJS) build
-	$(CXX) $(CXXFLAGS) $< -o $@ $(CXX_OBJS) $(LDFLAGS)
+# Exclude main.o from test binaries
+TEST_OBJS := $(filter-out build/main.o,$(CXX_OBJS))
+build/test_%: tests/test_%.cc $(TEST_OBJS) build
+	$(CXX) $(CXXFLAGS) $< -o $@ $(TEST_OBJS) $(LDFLAGS)
 
 clean:
 	rm -rf build $(TARGET) $(TEST_BINARIES)
