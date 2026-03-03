@@ -77,4 +77,20 @@ void hls_list::update_m3u8(int last_seg)
     upload_file(out_filename, "stream.m3u8");
 }
 
+const char* hls_list::file(int index) const
+{
+    if (index < 0 || index >= m_len) {
+        return "";
+    }
+    return m_lst_files[index].c_str();
+}
+
+double hls_list::time(int index) const
+{
+    if (index < 0 || index >= m_len) {
+        return 0.0;
+    }
+    return m_lst_times[index];
+}
+
 } //namespace ezlive

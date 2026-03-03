@@ -5,6 +5,11 @@
 
 namespace ezlive {
 
+ring_buffer::ring_buffer(size_t sz)
+    : m_buffer(sz, 0)
+{
+}
+
 void ring_buffer::stop()
 {
     std::unique_lock<std::mutex> lk{m_lock};

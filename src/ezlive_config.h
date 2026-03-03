@@ -7,6 +7,8 @@ namespace ezlive {
 
 class config {
 public:
+    explicit config();    
+    int load(const char *filename);
     std::string listening_addr;
     int listening_port;
     std::string bucket;
@@ -16,11 +18,6 @@ public:
     std::string secret_key;
     std::string region;
     std::string key;
-
-    explicit config();
-    
-    int load(const char *filename);
-
 private:
     int validate();
 };

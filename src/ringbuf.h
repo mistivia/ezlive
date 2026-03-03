@@ -9,26 +9,12 @@ namespace ezlive {
 
 class ring_buffer {
 public:
-    ring_buffer(size_t sz)
-        : m_buffer(sz, 0)
-    {}
-
-    size_t size()
-    {
-        return m_size;
-    }
-    
-    size_t space()
-    {
-        return m_buffer.size() - m_size;
-    }
-    
+    ring_buffer(size_t sz);
+    size_t size() { return m_size; }
+    size_t space() { return m_buffer.size() - m_size; }
     size_t write(const uint8_t *data, size_t len);
-    
     size_t read(uint8_t *data, size_t len);
-    
     void stop();
-
 private:
     std::vector<uint8_t> m_buffer;
     int64_t m_size = 0;
