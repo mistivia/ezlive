@@ -4,6 +4,8 @@
 #include "ringbuf.h"
 #include "pthread.h"
 
+namespace ezlive {
+
 typedef struct {
     char *files[15];
     double times[15];
@@ -13,7 +15,7 @@ typedef struct {
 typedef struct {
     pthread_mutex_t lock;
     pthread_cond_t streaming_cond;
-    RingBuffer *stream;
+    ring_buffer *stream;
     bool quit;
     HlsList lst;
     time_t last_updated;
@@ -22,6 +24,8 @@ typedef struct {
 void TranscodeTalker_init(TranscodeTalker *self);
 
 void* TranscodeTalker_main(void *vself);
-void TranscodeTalker_new_stream(TranscodeTalker *self, RingBuffer *ringbuf);
+void TranscodeTalker_new_stream(TranscodeTalker *self, ring_buffer *ringbuf);
+
+}
 
 #endif

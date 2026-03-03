@@ -1,7 +1,7 @@
 CC := gcc
 CXX := g++
 CFLAGS := -g -Wall -std=gnu99
-CXXFLAGS := -g -Wall -std=c++14
+CXXFLAGS := -g -Wall -fno-exceptions -std=c++14
 UNAME := $(shell uname -s)
 LDFLAGS := -g -lsrt \
 	-lavformat -lavutil -lavcodec \
@@ -12,7 +12,7 @@ ifeq ($(findstring MINGW,$(UNAME)),MINGW)
 endif
 
 C_SOURCES := $(shell find . -maxdepth 1 -name '*.c')
-CPP_SOURCES := $(shell find . -maxdepth 1 -name '*.cpp')
+CPP_SOURCES := $(shell find . -maxdepth 1 -name '*.cc')
 
 C_OBJS := $(C_SOURCES:.c=.o)
 CPP_OBJS := $(CPP_SOURCES:.cpp=.o)

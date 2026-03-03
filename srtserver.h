@@ -1,24 +1,17 @@
-#ifndef SRTSERVER_H_
-#define SRTSERVER_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef struct {
-    void (*on_start)(void *ctx);
-    void (*on_stop)(void *ctx);
-    void (*on_data)(void* ctx, char *buf, size_t size);
-} SrtCallbacks;
+namespace ezlive {
 
-void start_srt_server(SrtCallbacks cbs, void *ctx);
+class srt_callback {
+public:
+    virtual void on_srt_start() = 0;
+    virtual void on_srt_stop() = 0;
+    virtual void on_srt_data(char *buf, size_t size) = 0;
+};
 
-#ifdef __cplusplus
-}
-#endif
+void start_srt_server(srt_callback *cbs);
 
-
-#endif
+} // namespace ezlive
