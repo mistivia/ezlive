@@ -188,9 +188,9 @@ void transmuxer::main_loop()
         AVFormatContext *in_fmt_ctx = avformat_alloc_context();
         in_fmt_ctx->pb = create_avio_from_ring_buffer(m_stream, 4096);
         defer av_clean{[&]() {
-            avformat_close_input(&in_fmt_ctx);
             av_free(in_fmt_ctx->pb->buffer);
             avio_context_free(&in_fmt_ctx->pb);
+            avformat_close_input(&in_fmt_ctx);
         }};
         const AVInputFormat *input_fmt = av_find_input_format("mpegts");
         if (avformat_open_input(&in_fmt_ctx, NULL, input_fmt, NULL) < 0) {
