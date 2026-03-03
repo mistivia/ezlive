@@ -45,3 +45,9 @@ namespace的右大括号要加注释：
 这个项目里面的class一律放在namespace ezlive中
 
 构造器一律用explicit
+
+测试全部在 tests/test_*.cc
+
+测试断言只使用 <cassert>
+
+用make test运行测试
