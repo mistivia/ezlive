@@ -81,7 +81,7 @@ ring_buffer_avio_read(void *ctx, uint8_t *buf, int buf_size)
 }
 
 AVIOContext* create_avio_from_ring_buffer(ring_buffer *rb, int buffer_size) {
-    uint8_t *avio_buf = av_malloc(buffer_size);
+    uint8_t *avio_buf = (uint8_t*)av_malloc(buffer_size);
     AVIOContext *avio = avio_alloc_context(
         avio_buf, buffer_size,
         0,

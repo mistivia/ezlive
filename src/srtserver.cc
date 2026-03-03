@@ -1,28 +1,16 @@
 #include "srtserver.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <stdarg.h>
-
 #if defined(_WIN32)
     #include <winsock2.h>
-#else
-    #include <sys/socket.h>
-    #include <netinet/in.h>
-    #include <sys/poll.h>
-    #include <sys/time.h>
-    #include <unistd.h>
-    #include <fcntl.h>
-    #include <arpa/inet.h>
 #endif
 
 #include <srt/srt.h>
 
 #include "ezlive_config.h"
 
-#define BUFFER_SIZE 1500
+namespace ezlive {
+
+const int BUFFER_SIZE = 1500;
 
 int handshake_callback(void* opaq, SRTSOCKET ns, int hs_version, const struct sockaddr* peeraddr, const char* streamid) {
     char addr_str[INET_ADDRSTRLEN] = {0};
@@ -64,7 +52,7 @@ void setsock(SRTSOCKET *sock) {
     srt_setsockopt(*sock, 0, SRTO_LATENCY, &latency, sizeof(latency));
 }
 
-void start_srt_server(SrtCallbacks srtcb, void *ctx) {
+void start_srt_server(srt_callback *callback) {
     if (srt_startup() != 0) {
         fprintf(stderr, "SRT startup failed.\n");
         return;
@@ -115,7 +103,7 @@ void start_srt_server(SrtCallbacks srtcb, void *ctx) {
         setsock(&client_sock);
 
         printf("Client connected! Starting to receive data.\n");
-		srtcb.on_start(ctx);
+		callback->on_srt_start();
 
         char buffer[BUFFER_SIZE];
 
@@ -124,16 +112,16 @@ void start_srt_server(SrtCallbacks srtcb, void *ctx) {
 
             if (n == SRT_ERROR) {
                 fprintf(stderr, "Connection lost or error: %s\n", srt_getlasterror_str());
-				srtcb.on_stop(ctx);
+				callback->on_srt_stop();
                 break;
             }
 
             if (n == 0) {
                 printf("Client closed connection.\n");
-				srtcb.on_stop(ctx);
+				callback->on_srt_stop();
                 break;
             }
-			srtcb.on_data(ctx, buffer, n);
+			callback->on_srt_data(buffer, n);
         }
         printf("Closing client socket.\n");
         srt_close(client_sock);
@@ -143,3 +131,5 @@ void start_srt_server(SrtCallbacks srtcb, void *ctx) {
     srt_cleanup();
     return;
 }
+
+} // namespace ezlive
