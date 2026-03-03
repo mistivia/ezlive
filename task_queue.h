@@ -1,26 +1,32 @@
 #pragma once
 
-#include <pthread.h>
+#include <functional>
+#include <vector>
+#include <mutex>
+#include <condition_variable>
 
-typedef void (*TaskFn)(void *arg);
+namespace ezlive {
 
-typedef struct {
-    TaskFn *tasks;
-    void **args;
-    int capacity;
-    int front;
-    int end;
-    int size;
-    pthread_mutex_t lock;
-    pthread_cond_t not_full;
-    pthread_cond_t not_empty;
-} TaskQueue;
+class task_queue {
+public:
+    using task_fn = std::function<void(void*)>;
 
-void TaskQueue_init(TaskQueue *self, int capacity);
+    explicit task_queue(int capacity);
+    ~task_queue();
 
-void TaskQueue_destroy(TaskQueue *self);
+    void push(task_fn task, void* arg);
+    void pop(task_fn& task, void** arg);
 
-void TaskQueue_push(TaskQueue *self, TaskFn task, void *arg);
+private:
+    std::vector<task_fn> m_tasks;
+    std::vector<void*> m_args;
+    int m_capacity;
+    int m_front;
+    int m_end;
+    int m_size;
+    std::mutex m_lock;
+    std::condition_variable m_not_full;
+    std::condition_variable m_not_empty;
+};
 
-void TaskQueue_pop(TaskQueue *self, TaskFn *task, void **arg);
-
+} // namespace ezlive

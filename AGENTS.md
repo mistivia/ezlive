@@ -30,3 +30,7 @@ namespace的右大括号要加注释：
 缩进4个空格
 
 头文件guard用 #pragma once
+
+这个项目里面的class一律放在namespace ezlive中
+
+构造器一律用explicit
