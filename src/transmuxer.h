@@ -1,26 +1,37 @@
-#ifndef TRANSCODE_TALKER_H_
-#define TRANSCODE_TALKER_H_
+#pragma once
 
 #include "ringbuf.h"
 #include "hls_list.h"
-#include "pthread.h"
+
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 namespace ezlive {
 
-typedef struct {
-    pthread_mutex_t lock;
-    pthread_cond_t streaming_cond;
-    ring_buffer *stream;
-    bool quit;
+class transmuxer {
+public:
+    explicit transmuxer();
+    ~transmuxer();
+
+    void start();
+    void stop();
+    void new_stream(ring_buffer *ringbuf);
+
+private:
+    void main_loop();
+    void check_timer_loop();
+    int wait_for_new_stream();
+    bool should_quit();
+
+    std::mutex m_lock;
+    std::condition_variable m_streaming_cond;
+    ring_buffer *m_stream;
+    bool m_quit;
     hls_list m_lst;
-    time_t last_updated;
-} TranscodeTalker;
+    time_t m_last_updated;
+    std::thread m_main_thread;
+    std::thread m_check_thread;
+}; //class transmuxer
 
-void TranscodeTalker_init(TranscodeTalker *self);
-
-void* TranscodeTalker_main(void *vself);
-void TranscodeTalker_new_stream(TranscodeTalker *self, ring_buffer *ringbuf);
-
-}
-
-#endif
+} //namespace ezlive

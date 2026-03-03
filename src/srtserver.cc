@@ -25,12 +25,12 @@ int handshake_callback(void* opaq, SRTSOCKET ns, int hs_version, const struct so
         return -1;
     }
 
-	if (strlen(ezlive_config->key) == 0) {
+	if (g_config->key.size() == 0) {
 		printf("[Callback] No key. Skip auth.\n");
 		return 0;
 	}
-    if (strcmp(streamid, ezlive_config->key) != 0) {
-        printf("[Callback] Rejected: Invalid Key. Expected '%s', got '%s'\n", ezlive_config->key, streamid);
+    if (streamid != g_config->key) {
+        printf("[Callback] Rejected: Invalid Key. Expected '%s', got '%s'\n", g_config->key.c_str(), streamid);
         return -1;
     }
 
@@ -70,8 +70,8 @@ void start_srt_server(srt_callback *callback) {
 
     struct sockaddr_in sa = {0};
     sa.sin_family = AF_INET;
-    sa.sin_port = htons(ezlive_config->listening_port);
-	if (inet_pton(AF_INET, ezlive_config->listening_addr, &sa.sin_addr.s_addr) <= 0) {
+    sa.sin_port = htons(g_config->listening_port);
+	if (inet_pton(AF_INET, g_config->listening_addr.c_str(), &sa.sin_addr.s_addr) <= 0) {
 		fprintf(stderr, "Invalid IP address\n");
 		exit(-1);
 	}
@@ -83,7 +83,7 @@ void start_srt_server(srt_callback *callback) {
         return;
     }
 	srt_listen_callback(bind_sock, handshake_callback, NULL);
-    printf("SRT Server listening on port %d...\n", ezlive_config->listening_port);
+    printf("SRT Server listening on port %d...\n", g_config->listening_port);
     if (srt_listen(bind_sock, 5) == SRT_ERROR) {
         fprintf(stderr, "Listen error: %s\n", srt_getlasterror_str());
         return;

@@ -42,6 +42,6 @@ build/test_%: tests/test_%.cc $(CXX_OBJS) build
 	$(CXX) $(CXXFLAGS) $< -o $@ $(CXX_OBJS) $(LDFLAGS)
 
 clean:
-	rm -rf build $(TARGET)
+	rm -rf build $(TARGET) $(TEST_BINARIES)
 
 .PHONY: all clean test build
