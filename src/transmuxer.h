@@ -13,6 +13,8 @@ class transmuxer {
 public:
     explicit transmuxer();
     ~transmuxer();
+    transmuxer(const transmuxer&) = delete;
+    transmuxer& operator=(const transmuxer&) = delete;
     void start();
     void stop();
     void new_stream(ring_buffer *ringbuf);

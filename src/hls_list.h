@@ -11,6 +11,8 @@ class hls_list {
 public:
     explicit hls_list();
     ~hls_list();
+    hls_list(const hls_list&) = delete;
+    hls_list& operator=(const hls_list&) = delete;
     std::string push(const std::string& name, double time);
     void clear();
     void update_m3u8(int last_seg);

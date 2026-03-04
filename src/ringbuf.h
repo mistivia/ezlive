@@ -10,6 +10,8 @@ namespace ezlive {
 class ring_buffer {
 public:
     ring_buffer(size_t sz);
+    ring_buffer(const ring_buffer&) = delete;
+    ring_buffer& operator=(const ring_buffer&) = delete;
     size_t size() { return m_size; }
     size_t space() { return m_buffer.size() - m_size; }
     size_t write(const uint8_t *data, size_t len);

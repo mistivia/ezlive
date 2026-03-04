@@ -11,6 +11,8 @@ class task_queue {
 public:
     using task_fn = std::function<void(void*)>;
     explicit task_queue(int capacity);
+    task_queue(const task_queue&) = delete;
+    task_queue& operator=(const task_queue&) = delete;
     ~task_queue();
     void push(task_fn task, void* arg);
     void pop(task_fn& task, void** arg);
