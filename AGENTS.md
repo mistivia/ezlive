@@ -1,4 +1,6 @@
-这个项目本来是C项目，现在要改成C++项目。
+`TASK.md`用cat命令获取
+
+## 编码风格
 
 类名用snake case，比如 class my_type
 
@@ -44,6 +46,11 @@ namespace的右大括号要加注释：
 
 这个项目里面的class一律放在namespace ezlive中
 
+
+构造函数优先用{}，例如 my_type my_obj{};
+
+## 测试
+
 构造器一律用explicit
 
 测试全部在 tests/test_*.cc
@@ -51,5 +58,3 @@ namespace的右大括号要加注释：
 测试断言只使用 <cassert>
 
 用make test运行测试
-
-构造函数优先用{}，例如 my_type my_obj{};
