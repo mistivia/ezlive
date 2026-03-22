@@ -1,6 +1,6 @@
 # EZLive: Self-hosted Serverless Livestream
 
-EZLive is a minimal self-hosted livestream solution built on top of S3-compatible object storage.
+EZLive is a self-hosted serverless livestream solution built on top of S3-compatible object storage.
 
 
 It runs a local SRT server, receive live video, turns it into HLS segments (.m3u8 + .ts) and serves them as static files through any S3-compatible object storage. No dedicated streaming server is required — everything runs serverlessly. Then you can easily setup a HTML5 HLS player to watch the stream.
