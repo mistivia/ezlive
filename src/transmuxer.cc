@@ -59,7 +59,7 @@ StreamPair start_new_output_file(
 
     if (avformat_write_header(*out_fmt_ctx, NULL) < 0) {
         fprintf(stderr, "avformat_write_header failed.\n");
-        abort();
+        _exit(-1);
     }
     return (StreamPair) {
         .audio_stream = out_video_stream,
