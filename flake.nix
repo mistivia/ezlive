@@ -18,12 +18,15 @@
 
           src = ./.;
 
-          nativeBuildInputs = with pkgs; [];
+          nativeBuildInputs = with pkgs; [
+            makeWrapper
+          ];
 
           buildInputs = with pkgs; [
             ffmpeg
             srt
             aws-sdk-cpp
+            cacert
           ];
 
           makeFlags = [
@@ -36,6 +39,11 @@
             mkdir -p $out/bin
             cp ezlive $out/bin/
             runHook postInstall
+          '';
+
+          postInstall = ''
+            wrapProgram $out/bin/ezlive \
+              --set SSL_CERT_FILE "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
           '';
 
           meta = with pkgs.lib; {
