@@ -90,6 +90,7 @@ int main(int argc, char **argv)
     std::thread s3worker_thread{[]() {
         s3_worker_run(NULL);
     }};
+    s3worker_thread.detach();
     ctx.start_transmuxer();
     start_srt_server(static_cast<srt_callback*>(&ctx));
     ctx.stop_transmuxer();
