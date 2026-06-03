@@ -1,12 +1,12 @@
-* unreleased
-refactor to c++
-increase SRT latency to 8000ms
+v0.3.0 2026-05-11
+Refactor to c++
+Increase SRT latency to 8000ms
 
-v0.2.1
-windows support
+v0.2.1 2025-12-21
+Windows support
 
-v0.2.0
-ingest server changed from RTMP to SRT
+v0.2.0 2025-12-20
+Ingest server changed from RTMP to SRT
 
-v0.1
-initial release
+v0.1 2025-09-14
+Initial release
