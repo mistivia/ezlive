@@ -25,3 +25,4 @@ target/
 build/
 result
 compile_commands.json
+AGENTS.md
